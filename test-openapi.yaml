@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 1.0.0
+  description: Простой контракт для проверки плагина
+paths:
+  /ping:
+    get:
+      summary: Проверка соединения
+      operationId: ping
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pong'
+components:
+  schemas:
+    Pong:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "pong"

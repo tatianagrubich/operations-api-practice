@@ -1,0 +1,10 @@
+extends: ["spectral:oas"]
+rules:
+  operation-operationId: error
+  info-contact: off
+  oas3-api-servers: off
+  info-description: warn
+  operation-description: warn
+  # Запрет глаголов в URI
+  path-params: error
+  paths-kebab-case: off # Мы используем snake_case
