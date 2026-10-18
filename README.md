@@ -30,6 +30,7 @@
 
 ```bash
 git clone <ССЫЛКА_HTTPS>
+
 Если Git не установлен, VS Code может предложить его скачать и установить прямо из всплывающего окна.
 Если при клонировании откроется окно авторизации GitHub, просто войдите через браузер.
 
@@ -37,11 +38,13 @@ git clone <ССЫЛКА_HTTPS>
 
 ```bash
 cd operations-api-practice
+
 Шаг 3. Открытие проекта и установка плагинов
 В том же терминале VS Code введите:
 
 ```bash
 code .
+
 (Или выберите Файл -> Открыть папку... и укажите папку operations-api-practice).
 
 Если появится окно «Вы доверяете авторам файлов в этой папке?», нажмите «Да, я доверяю».
@@ -68,6 +71,7 @@ Java (JDK): Скачайте и установите Java 17 или 21 с adopti
 ```bash
 node --version
 java --version
+
 Обе команды должны показать версии (например, v20.11.0 и openjdk 17.0.8).
 
 Шаг 5. Установка инструментов (Spectral, swagger-cli, openapi-generator)
@@ -75,22 +79,27 @@ java --version
 
 ```bash
 npm install -g @stoplight/spectral-cli
+
 ```bash
 npm install -g @apidevtools/swagger-cli
+
 ```bash
 npm install -g @openapitools/openapi-generator-cli
+
 Проверка: Введите эти команды, каждая должна показать номер версии:
 
 ```bash
 spectral --version
 swagger-cli --version
 openapi-generator-cli version
+
 Шаг 6. Настройка Git (если требуется)
 Если вы впервые работаете с Git, укажите ваше имя и email в терминале VS Code (чтобы ваши коммиты были подписаны):
 
 ```bash
 git config --global user.name "Ваше Имя"
 git config --global user.email "ваш-email@example.com"
+
 🚀 Как начать работу на занятии
 Убедитесь, что вы находитесь в папке проекта и терминал VS Code открыт.
 
@@ -100,10 +109,12 @@ git config --global user.email "ваш-email@example.com"
 
 ```bash
 git checkout feature/team-a
+
 Группа Б (Платформенный контур):
 
 ```bash
 git checkout feature/team-b
+
 📂 Структура репозитория
 api/openapi.yaml — здесь вы будете писать ваш контракт.
 
@@ -118,18 +129,21 @@ test-openapi.yaml — файл для проверки работы плагин
 
 ```bash
 swagger-cli validate api/openapi.yaml
+
 (Должно вернуть: api/openapi.yaml is valid)
 
 Проверить стиль и правила (lint):
 
 ```bash
 spectral lint api/openapi.yaml
+
 (Должно вернуть: No results with a severity of 'error' found!)
 
 Сгенерировать Java-код из контракта (codegen):
 
 ```bash
 openapi-generator-cli generate -i api/openapi.yaml -g java -o generated/java/
+
 (Код появится в папке generated/java/)
 
 Сохранить изменения в Git:
@@ -138,4 +152,5 @@ openapi-generator-cli generate -i api/openapi.yaml -g java -o generated/java/
 git add .
 git commit -m "feat: описание того, что сделали"
 git push origin feature/team-a
+
 Если при команде git push Git запросит пароль, введите не ваш обычный пароль от GitHub, а Personal Access Token (PAT). Если вы работаете через встроенный терминал VS Code, он обычно сам перехватывает эту команду и открывает окно авторизации в браузере.
