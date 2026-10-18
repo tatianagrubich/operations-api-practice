@@ -1,10 +1,59 @@
-extends: ["spectral:oas"]
+extends: [[spectral:oas, recommended]]
+functions: [pattern, length]
 rules:
-  operation-operationId: error
-  info-contact: off
-  oas3-api-servers: off
-  info-description: warn
-  operation-description: warn
-  # Запрет глаголов в URI
-  path-params: error
-  paths-kebab-case: off # Мы используем snake_case
+  bank-paths-kebab-case:
+    description: "Все сегменты путей API Ленты операций должны быть написаны в нижнем регистре и разделяться дефисом (kebab-case)."
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^/([a-z0-9]+(-[a-z0-9]+)*)(/[a-z0-9]+(-[a-z0-9]+)*)*(\\{[a-zA-Z0-9_]+\\})*(/[a-z0-9]+(-[a-z0-9]+)*)*$"
+  bank-no-crud-in-paths:
+    description: "В URL путей запрещено использовать CRUD-глаголы и RPC-стиль (get, create, update, delete, apply)."
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: ".*(get|create|update|delete|apply|show|fetch|add).*"
+  bank-no-trailing-slash:
+    description: "Использование косой черты (trailing slash) в конце URL категорически запрещено."
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: ".+/$"
+  bank-properties-camel-case:
+    description: "Все JSON-атрибуты и query-параметры Ленты обязаны использовать регистр lowerCamelCase."
+    severity: error
+    given: $.components.schemas.*.properties.*~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+  bank-schemas-upper-camel-case:
+    description: "Названия переиспользуемых компонентов (schemas) должны использовать регистр UpperCamelCase."
+    severity: error
+    given: $.components.schemas.*~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[A-Z][a-zA-Z0-9]*$"
+  bank-post-idempotency-key-required:
+    description: "Любой изменяющий операцию метод POST обязан содержать обязательный заголовок Idempotency-Key."
+    severity: error
+    given: $.paths[*].post.parameters
+    then:
+      function: pattern
+      functionOptions:
+        match: ".*Idempotency-Key.*"
+  bank-list-item-flat-structure:
+    description: "Списочные схемы (ListItem) для обеспечения SLA 150 мс не должны содержать глубоких вложенных объектов (разрешено не более 2 уровней объектов)."
+    severity: warning
+    given: $.components.schemas.[?(@property.match(/ListItem/))].properties.*.properties.*.properties
+    then:
+      function: length
+      functionOptions:
+        max: 0
