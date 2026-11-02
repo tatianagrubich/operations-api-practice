@@ -5,7 +5,7 @@
 | Схема | Поле | Ссылка |
 |---|---|---|
 | `OperationListItem` | `amount` | `$ref: '#/components/schemas/Money'` |
-| `OperationDetail` | (наследует `amount` через `allOf` → `OperationListItem`) | `$ref: '#/components/schemas/Money'` (косвенно) |
+| `OperationDetail` | наследует `amount` через `allOf` → `OperationListItem` | `$ref: '#/components/schemas/Money'` (косвенно) |
 
 ## Где используется OperationListItem
 

@@ -1,4 +1,4 @@
-extends: [spectral:oas, recommended]
+extends: ["spectral:oas"]
 
 rules:
   bank-paths-kebab-case:
