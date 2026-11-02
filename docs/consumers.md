@@ -1,46 +1,54 @@
 # Consumers Operations History API
 
 ## Mobile App
+Высоконагруженный потребитель (Лента операций на экране смартфона).
+Требование ИБ и оптимизации: плоская структура `OperationListItem` (размер объекта ≤ 400 байт) для обеспечения нагрузки 12 000 RPS и SLA ≤ 150 мс.
 
-| Что читает | Где |
-|---|---|
-| `OperationListItem.id` | список операций |
-| `OperationListItem.status` | список операций |
-| `OperationListItem.amount` | список операций (ссылается на `Money`) |
-| `OperationListItem.accountNumber` | список операций (маскированный) |
-| `OperationDetail.customer` | детали операции |
-| `OperationDetail.audit` | детали операции |
+| Что читает | Где | Назначение / Обоснование |
+|---|---|---|
+| `OperationListItem.id` | список операций | Идентификатор для навигации и формирования cursor-based пагинации |
+| `OperationListItem.status` | список операций | Отображение фазы операции (HOLD/SETTLED) |
+| `OperationListItem.amount` | список операций | Сумма и валюта для вывода в ленту (объект `Money`) |
+| `OperationListItem.accountNumber` | список операций | Маскированный номер счёта по маске `40817***********4321` (требование ИБ) |
+| `OperationListItem.createdAt` | список операций | Дата и время операции для отображения в ленте |
 
-**Не читает:** `Merchant`, `Document`, `scoringDecision`.
+* **Не читает:** `OperationDetail.customer`, `audit`, `merchant`, `scoringDecision`, `Document`.
+* **Примечание по пагинации:** Сортировка и стабильность выборки обеспечиваются передачей Base64-курсора (`timestamp + operationId`).
 
-## CRM
+## CRM (Система поддержки менеджеров)
+Потребитель детального контура. Используется для разбора жалоб клиентов и ручной корректировки скоринговых решений.
 
-| Что читает | Где |
-|---|---|
-| `OperationDetail.customer` | детали операции |
-| `OperationDetail.audit` | детали операции |
-| `OperationDetail.merchant` | детали операции |
-| `OperationDetail.amount` | детали операции (ссылается на `Money`) |
-| `ApplyDecisionRequest.scoringDecision` | корректировка решения |
-| `ApplyDecisionRequest.reason` | корректировка решения |
+| Что читает | Где | Назначение / Обоснование |
+|---|---|---|
+| `OperationListItem.id` | детали операции | Идентификатор операции (наследуется через `allOf`) |
+| `OperationListItem.status` | детали операции | Статус операции (наследуется через `allOf`) |
+| `OperationListItem.amount` | детали операции | Сумма и валюта (наследуется через `allOf`) |
+| `OperationListItem.accountNumber` | детали операции | Маскированный номер счёта (наследуется через `allOf`) |
+| `OperationListItem.createdAt` | детали операции | Дата и время операции (наследуется через `allOf`) |
+| `OperationDetail.customer` | детали операции | ФИО / Наименование клиента для идентификации |
+| `OperationDetail.audit` | детали операции | Аудит операции (текстовое описание) |
+| `OperationDetail.merchant` | детали операции | Наименование торгово-сервисной точки |
+| `OperationDetail.scoringDecision` | детали операции | Текущее скоринговое решение (`ALLOWED` / `DENIED`) до корректировки |
+| `ApplyDecisionRequest.scoringDecision` | корректировка решения | Новое скоринговое решение, отправляемое менеджером (тело POST) |
+| `ApplyDecisionRequest.reason` | корректировка решения | Обязательное текстовое обоснование причины корректировки |
 
-**Использует:** `amount` для отображения, `scoringDecision` для корректировки.
+* **Использует:** `Idempotency-Key` (в header запроса POST) для защиты от дублирования бизнес-решений при сетевых сбоях.
 
-## Analytics
+## Analytics (Аналитический движок)
+Потребитель фонового контура для построения отчётности. Money и персональные данные не читает.
 
-| Что читает | Где |
-|---|---|
-| `OperationListItem.id` | список операций |
-| `OperationListItem.status` | список операций |
-| `OperationListItem.amount` | список операций (ссылается на `Money`) |
+| Что читает | Где | Назначение / Обоснование |
+|---|---|---|
+| `OperationListItem.id` | список операций | Идентификатор операции (`operationId`) |
+| `OperationListItem.status` | список операций | Статус для разметки воронки |
+| `OperationListItem.createdAt` | список операций | Дата и время операции для аналитики по историческим периодам |
 
-**Не читает:** `customer`, `audit`, `merchant`, `accountNumber`.
+* **Не читает:** `Money` (`amount`, `currency`), `customer`, `merchant`, `accountNumber`.
 
 ## Partner (демонстрационный пример)
+Изолированный consumer из презентации (слайд 18) для демонстрации работы сплита полей. В сквозном OpenAPI-контракте Operations History API не участвует.
 
-| Что читает | Где |
-|---|---|
-| `Money.amount` | все модели, где используется `Money` |
-| `Money.currency` | все модели, где используется `Money` |
-
-**Примечание:** Partner — демонстрационный consumer из презентации (слайд 18). В сквозном кейсе темы 4 consumers — Mobile и CRM.
+| Что читает | Где | Назначение / Обоснование |
+|---|---|---|
+| `Money.amount` | объект `Money` | Чтение числового значения суммы |
+| `Money.currency` | объект `Money` | Чтение буквенного кода валюты ISO 4217 |

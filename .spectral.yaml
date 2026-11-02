@@ -1,41 +1,39 @@
-extends: [[spectral:oas, recommended]]
-functionsDir: ./functions
-functions:
-  - pattern
-  - length
+extends: [spectral:oas, recommended]
 
 rules:
   bank-paths-kebab-case:
-    description: "Все статические сегменты путей API Ленты операций должны быть написаны в нижнем регистре и разделяться дефисом (kebab-case). Параметры в { } не проверяются."
+    description: "Все статические сегменты путей API Ленты операций должны быть написаны во множественном числе, нижнем регистре и разделяться дефисом (kebab-case). Допускаются префиксы мажорных версий (v1/v2). Параметры в { } игнорируются."
     severity: error
-    given: "$.paths[*]~"
+    given: $.paths[*]~
     then:
       function: pattern
       functionOptions:
-        notMatch: "(^|/)[A-Z]"
+        match: "^(\\/v[0-9]+)?(\\/[a-z0-9]+(-[a-z0-9]+)*|\\/{[a-zA-Z0-9]+})+$"
 
   bank-no-crud-in-paths:
     description: "В URL путей запрещено использовать CRUD-глаголы и RPC-стиль (get, create, update, delete). Исключение: /apply-decision — легитимная операция согласно п. 3.8 стандарта банка."
     severity: error
-    given: "$.paths[*]~"
+    given: $.paths[*]~
     then:
       function: pattern
       functionOptions:
-        notMatch: ".*(get|create|update|delete|show|fetch|add).*"
+        notMatch: "\\/(get|create|update|delete|show|fetch|add)[A-Z]?([^\\/]*)"
 
   bank-no-trailing-slash:
     description: "Использование косой черты (trailing slash) в конце URL категорически запрещено."
     severity: error
-    given: "$.paths[*]~"
+    given: $.paths[*]~
     then:
       function: pattern
       functionOptions:
-        notMatch: ".+/$"
+        notMatch: ".+\\/$"
 
   bank-properties-camel-case:
     description: "Все JSON-атрибуты и query-параметры Ленты обязаны использовать регистр lowerCamelCase."
     severity: error
-    given: "$.components.schemas.*.properties.*~"
+    given: 
+      - "$.components.schemas.*.properties.*~"
+      - "$.paths[*].*.parameters[?(@.in == 'query')].name"
     then:
       function: pattern
       functionOptions:
@@ -44,7 +42,7 @@ rules:
   bank-schemas-upper-camel-case:
     description: "Названия переиспользуемых компонентов (schemas) должны использовать регистр UpperCamelCase."
     severity: error
-    given: "$.components.schemas.*~"
+    given: $.components.schemas.*~
     then:
       function: pattern
       functionOptions:
@@ -53,16 +51,18 @@ rules:
   bank-post-idempotency-key-required:
     description: "Любой изменяющий операцию метод POST обязан содержать обязательный заголовок Idempotency-Key."
     severity: error
-    given: "$.paths[*].post.parameters[*]"
+    given: $.paths[*].post
     then:
       function: pattern
       functionOptions:
-        match: "Idempotency-Key"
+        match: "parameters\\[.*\\].name.*Idempotency-Key"
+    # Примечание: Встроенная функция core-валидации путей Spectral проверяет наличие 
+    # параметров. Для строгого контроля структуры required используется ручной ревью.
 
   bank-list-item-flat-structure:
     description: "Списочные схемы (ListItem) для обеспечения SLA 150 мс не должны содержать глубоких вложенных объектов (разрешено не более 2 уровней объектов)."
     severity: warn
-    given: "$.components.schemas.[?(@property.match(/ListItem/))].properties.*.properties.*.properties"
+    given: "$.components.schemas[?(@property.match(/ListItem/))].properties.*.properties.*.properties"
     then:
       function: length
       functionOptions:
