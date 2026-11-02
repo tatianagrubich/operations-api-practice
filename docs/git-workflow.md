@@ -132,7 +132,7 @@ base: main, compare: feature/team-a;
 
 ## 4. Права доступа и авторизация
 ### 4.1. Права на запись
-Все участники получают роль Collaborator в репозитории titaniumgrabitch/operations-api-practice.
+Все участники получают роль Collaborator в репозитории tatianagrubich/operations-api-practice.
 
 Права выдаёт ведущий до занятия (или на первом занятии, если участник не был добавлен заранее).
 
