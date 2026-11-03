@@ -206,7 +206,7 @@ ssh -T git@github.com
 ```
 Если репозиторий клонирован по HTTPS, переключите remote на работу через SSH:
 ```bash
-git remote set-url origin git@github.com:aston-education/operations-api-practice.git
+git remote set-url origin git@github.com:tatianagrubich/operations-api-practice.git
 ```
 
 ### 4.3. Если push не проходит
