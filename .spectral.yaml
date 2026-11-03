@@ -1,6 +1,8 @@
 extends: ["spectral:oas"]
 
 rules:
+  # === СТАНДАРТЫ ПРОЕКТИРОВАНИЯ БАНКА ===
+
   bank-paths-kebab-case:
     description: "Все статические сегменты путей API Ленты операций должны быть написаны во множественном числе, нижнем регистре и разделяться дефисом (kebab-case). Допускаются префиксы мажорных версий (v1/v2). Параметры в { } игнорируются."
     severity: error
@@ -48,17 +50,6 @@ rules:
       functionOptions:
         match: "^[A-Z][a-zA-Z0-9]*$"
 
-  bank-post-idempotency-key-required:
-    description: "Любой изменяющий операцию метод POST обязан содержать обязательный заголовок Idempotency-Key."
-    severity: error
-    given: $.paths[*].post
-    then:
-      function: pattern
-      functionOptions:
-        match: "parameters\\[.*\\].name.*Idempotency-Key"
-    # Примечание: Встроенная функция core-валидации путей Spectral проверяет наличие 
-    # параметров. Для строгого контроля структуры required используется ручной ревью.
-
   bank-list-item-flat-structure:
     description: "Списочные схемы (ListItem) для обеспечения SLA 150 мс не должны содержать глубоких вложенных объектов (разрешено не более 2 уровней объектов)."
     severity: warn
@@ -67,3 +58,43 @@ rules:
       function: length
       functionOptions:
         max: 0
+
+  bank-post-idempotency-key-required:
+    description: "Любой изменяющий операцию метод POST обязан содержать обязательный заголовок Idempotency-Key (согласно п. 3.8 стандарта банка)."
+    severity: error
+    given: $.paths[*].post.parameters[?(@.in == 'header' && @.name == 'Idempotency-Key')]
+    then:
+      field: required
+      function: truthy
+
+  # === ТРЕБОВАНИЯ ИБ И ФЛК БАНКА ===
+
+  bank-string-max-length-required:
+    description: "Согласно п. 3.9 стандарта банка, для всех полей типа string верхняя граница длины должна быть жёстко зафиксирована через maxLength."
+    severity: error
+    given: $.components.schemas..properties[?(@.type === 'string' && @.format !== 'date-time' && @.format !== 'uuid')]
+    then:
+      field: maxLength
+      function: defined
+
+  bank-numeric-limits-required:
+    description: "Согласно п. 3.9 стандарта банка, для числовых и целочисленных полей обязательна декларация границ minimum и maximum."
+    severity: error
+    given: $.components.schemas..properties[?(@.type === 'number' || @.type === 'integer')]
+    then:
+      - field: minimum
+        function: defined
+      - field: maximum
+        function: defined
+
+  bank-account-masking-pattern-required:
+    description: "Требование ИБ: номера счетов (accountNumber) обязаны проходить строгую валидацию по маскированному шаблону (5 цифр + 11 звездочек + 4 цифры)."
+    severity: error
+    given: $.components.schemas..properties[?(@property === 'accountNumber')]
+    then:
+      - field: pattern
+        function: defined
+      - field: pattern
+        function: pattern
+        functionOptions:
+          match: '^\^40817\\\*\{11\}\[0-9\]\{4\}\$$'
