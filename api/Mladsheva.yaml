@@ -1,0 +1,1645 @@
+openapi: 3.0.1
+info:
+  title: 1388.alpp-comndatastorage-s-rest-v1
+  version: 1.0.0
+  description: API для работы с историей операций (Лента истории операций)
+  contact:
+    name: Anastasiay Mladsheva
+    email: mladsheva.nastya@yandex.ru
+    url: https://sfera.inno.local/knowledge/pages?id=1246094
+servers:
+  - url: 'http://localhost:8080/all/v1'
+    description: LOCAL
+tags:
+  - name: operation
+    description: операция
+paths:
+  /accounts/{accountId}/operations:
+    get:
+      summary: Метод получения истории операций счета
+      operationId: getOperationsByAccountIdandFilters
+      description: Метод для получения получения истории операций счета по фильтрам с пагинацией и сортировкой
+      tags:
+        - operation
+      parameters:
+        - $ref: '#/components/parameters/status'
+        - $ref: '#/components/parameters/startDate'
+        - $ref: '#/components/parameters/endDate'
+        - $ref: '#/components/parameters/categoryText'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/page'                                
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationListItem'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+  /operations/{operationId}:
+    get:
+      summary: Метод получения деталей истории конкретной операции
+      operationId: getOperation
+      description: Метод для получения деталей истории конкретной операции по фильтрам
+      tags:
+        - operation  
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+components:
+  parameters:
+    accountId:
+      name: accountId
+      required: true
+      in: path
+      schema:
+        type: string
+      description: Идентификатор счет клиента
+    operationId:
+      name: operationId
+      required: true
+      in: path
+      schema:
+        type: string
+      description: Идентификатор операции по счету 
+    status:
+      name: false
+      required: true
+      in: query
+      schema:
+        type: string
+        enum: [
+          "HOLD",
+          "SETTLED"               
+        ]        
+      description: Статус операции
+    startDate: 
+      name: startDate
+      required: false
+      in: query
+      schema:
+        type: string
+        format: date
+      description: Начальный диапазон времени операции    
+    endDate: 
+      name: endDate
+      required: false
+      in: query
+      schema:
+        type: string
+        format: date  
+      description: Конечный диапазон времени операции                        
+    categoryText:
+      name: categoryText
+      required: false
+      in: query
+      schema:
+        type: string
+      description: Категория трат  
+  schemas:
+    OperationListItem:
+      title: OperationListItem
+      description: Объект операции по счету клиента с ограниченной информацией
+      type: object
+      properties:
+        accountId:
+          type: string
+          description: Идентификатор счета 
+          minLength: 1
+        status:
+      name: false
+      required: true
+      in: query
+      schema:
+        type: string
+        enum: [
+          "HOLD",
+          "SETTLED"               
+        ] 
+        lmdObjectType:
+          $ref: '#/components/schemas/LmdObjectType'
+        deletionDate:
+          type: string
+          format: date
+          description: Дата удаления записи
+        hashSum:
+          type: string
+          maxLength: 64
+          description: Хеш-сумма бизнес-данных инкремента ЛМД-объекта
+        saleProcessInvolved:
+          type: boolean
+          default: true
+          description: Признак вовлечения инкремента ЛМД-объекта в процесс продажи
+      required:
+        - lmdObjectType
+        - schemaVersion
+        - objectVersion
+        - hashSum
+        - saleProcessInvolved
+      discriminator:
+        propertyName: lmdObjectType
+        mapping:
+          'RetailCarLoanApplication': '#/components/schemas/RetailCarLoanApplicationRequest'
+          'RetailCarLoanAgreement': '#/components/schemas/RetailCarLoanAgreementRequest'
+          'RetailCarLoanServiceRequest': '#/components/schemas/RetailCarLoanServiceRequestRequest'
+          'RetailCarLoanParticipant': '#/components/schemas/RetailCarLoanParticipantRequest'
+          'RetailCarLoanProductLoan': '#/components/schemas/RetailCarLoanProductLoanRequest'
+          'RetailCarLoanCollateral': '#/components/schemas/RetailCarLoanCollateralRequest'
+          'RetailCarLoanService': '#/components/schemas/RetailCarLoanServiceRequest'
+          'RetailCarLoanProductInsurance': '#/components/schemas/RetailCarLoanProductInsuranceRequest'
+          'RetailCarLoanVehicle': '#/components/schemas/RetailCarLoanVehicleRequest'
+          'RetailCarLoanDeal': '#/components/schemas/RetailCarLoanDealRequest'
+          'RetailCarLoanLeadEventOnHookUp': '#/components/schemas/RetailCarLoanLeadEventOnHookUpRequest'
+          'RetailCarLoanLead': '#/components/schemas/RetailCarLoanLeadRequest'
+          'RetailCarLoanEmployeeActionEventApplication': '#/components/schemas/RetailCarLoanEmployeeActionEventApplicationRequest'
+          'RetailCarLoanEmployeeActionEventDeal': '#/components/schemas/RetailCarLoanEmployeeActionEventDealRequest'
+          'RetailCarLoanServiceRequestExecutionPlan': '#/components/schemas/RetailCarLoanServiceRequestExecutionPlanRequest'
+          'RetailCarLoanMoneyTransferInstruction': '#/components/schemas/RetailCarLoanMoneyTransferInstructionRequest'
+          'RetailCarLoanProductInstanceTransaction': '#/components/schemas/RetailCarLoanProductInstanceTransactionRequest'          
+    RetailCarLoanApplicationResponse:
+      title: RetailCarLoanApplicationResponse
+      description: Данные лмд-объекта заявки
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanApplicationObject:
+              type: string
+              description: Лмд-объект заявки в формате строки
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            leadId:
+              type: string
+              description: Идентификатор лида
+              minLength: 1
+          required:
+            - applicationId
+    RetailCarLoanAgreementResponse:
+      title: RetailCarLoanAgreementResponse
+      description: Данные лмд-объекта договора
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanAgreementObject:
+              type: string
+              description: Лмд-объект договора в формате строки
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            parentAgreementId:
+              type: string
+              description: Идентификатор родительского договора
+              minLength: 1
+            dealId:
+              type: string
+              description: Идентификатор сделки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - agreementId
+    RetailCarLoanServiceRequestResponse:
+      title: RetailCarLoanServiceRequestResponse
+      description: Данные лмд-объекта запроса на обслуживание
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanServiceRequestObject:
+              type: string
+              description: Лмд-объект запроса на обслуживание в формате строки
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - serviceRequestId
+    RetailCarLoanParticipantResponse:
+      title: RetailCarLoanParticipantResponse
+      description: Данные лмд-объекта участников
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanParticipantObject:
+              type: string
+              description: Лмд-объект участников в формате строки
+            participantId:
+              type: string
+              description: Идентификатор участника
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - participantId
+    RetailCarLoanProductLoanResponse:
+      title: RetailCarLoanProductLoanResponse
+      description: Данные лмд-объекта продукта автокредита
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanProductLoanObject:
+              type: string
+              description: Лмд-объект продукта автокредита в формате строки
+            productLoanId:
+              type: string
+              description: Идентификатор продукта автокредита
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - productLoanId
+            - applicationId
+    RetailCarLoanCollateralResponse:
+      title: RetailCarLoanCollateralResponse
+      description: Данные лмд-объекта обеспечения
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanCollateralObject:
+              type: string
+              description: Лмд-объект обеспечения в формате строки
+            collateralId:
+              type: string
+              description: Идентификатор обеспечения
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - collateralId
+    RetailCarLoanServiceResponse:
+      title: RetailCarLoanServiceResponse
+      description: Данные лмд-объекта продукта доп. услуг и сервисов
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanServiceObject:
+              type: string
+              description: Лмд-объект продукта доп. услуг и сервисов в формате строки
+            serviceId:
+              type: string
+              description: Идентификатор продукта доп. услуг и сервисов
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - serviceId
+            - applicationId
+    RetailCarLoanProductInsuranceResponse:
+      title: RetailCarLoanProductInsuranceResponse
+      description: Данные лмд-объекта продукта страхования
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanProductInsuranceObject:
+              type: string
+              description: Лмд-объект продукта страхования в формате строки
+            productInsuranceId:
+              type: string
+              description: Идентификатор продукта страхования
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - productInsuranceId
+            - applicationId
+    RetailCarLoanVehicleResponse:
+      title: RetailCarLoanVehicleResponse
+      description: Данные лмд-объекта транспортного средства
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanVehicleObject:
+              type: string
+              description: Лмд-объект транспортного средства в формате строки
+            vehicleId:
+              type: string
+              description: Идентификатор транспортного средства
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+            vin:
+              type: string
+              description: ВИН
+              minLength: 1
+          required:
+            - vehicleId
+    RetailCarLoanDealResponse:
+      title: RetailCarLoanDealResponse
+      description: Данные лмд-объекта сделки по автокредиту
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanDealObject:
+              type: string
+              description: Лмд-объект сделки по автокредиту в формате строки
+            dealId:
+              type: string
+              description: Идентификатор сделки по автокредиту
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - dealId
+            - applicationId
+    RetailCarLoanLeadEventOnHookUpResponse:
+      title: RetailCarLoanLeadEventOnHookUpResponse
+      description: Данные лмд-объекта лида автокредита (подхват)
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanLeadEventOnHookUpObject:
+              type: string
+              description: Лмд-объект лида автокредита (подхват) в формате строки
+            leadEventOnHookupId:
+              type: string
+              description: Идентификатор лида автокредита (подхват)
+              minLength: 1
+          required:
+            - leadEventOnHookupId
+    RetailCarLoanLeadResponse:
+      title: RetailCarLoanLeadResponse
+      description: Данные лмд-объекта лида автокредита
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanLeadObject:
+              type: string
+              description: Лмд-объект лида автокредита в формате строки
+            leadId:
+              type: string
+              description: Идентификатор лида
+              minLength: 1
+            leadEventOnHookupId:
+              type: string
+              description: Идентификатор лида автокредита (подхват)
+              minLength: 1
+          required:
+            - leadId
+            - leadEventOnHookupId
+    RetailCarLoanEmployeeActionEventApplicationResponse:
+      title: RetailCarLoanEmployeeActionEventApplicationResponse
+      description: Данные лмд-объекта действия сотрудника по заявке на автокредит
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanEmployeeActionEventApplicationObject:
+              type: string
+              description: Лмд-объект действия сотрудника по заявке на автокредит в формате строки
+            employeeActionEventApplicationId:
+              type: string
+              description: Идентификатор действия сотрудника по заявке на автокредит
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+          required:
+            - employeeActionEventApplicationId
+            - applicationId
+    RetailCarLoanEmployeeActionEventDealResponse:
+      title: RetailCarLoanEmployeeActionEventDealResponse
+      description: Данные лмд-объекта действия сотрудника по сделке на автокредит
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanEmployeeActionEventDealObject:
+              type: string
+              description: Лмд-объект действия сотрудника по сделке на автокредит в формате строки
+            employeeActionEventDealId:
+              type: string
+              description: Идентификатор действия сотрудника по сделке на автокредит
+              minLength: 1
+            dealId:
+              type: string
+              description: Идентификатор сделки
+              minLength: 1
+          required:
+            - employeeActionEventDealId
+            - dealId
+    RetailCarLoanServiceRequestExecutionPlanResponse:
+      title: RetailCarLoanServiceRequestExecutionPlanResponse
+      description: Данные лмд-объекта плана исполнения по финансовой операции
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanServiceRequestExecutionPlanObject:
+              type: string
+              description: Лмд-объект плана исполнения по финансовой операции
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - serviceRequestExecutionPlanId
+    RetailCarLoanMoneyTransferInstructionResponse:
+      title: RetailCarLoanMoneyTransferInstructionResponse
+      description: Данные лмд-объекта инструкции на перевод денежных средств
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanMoneyTransferInstructionObject:
+              type: string
+              description: Лмд-объект инструкции на перевод денежных средств
+            moneyTransferInstructionId:
+              type: string
+              description: Идентификатор инструкции на перевод денежных средств
+              minLength: 1
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1              
+          required:
+            - moneyTransferInstructionId
+            - serviceRequestExecutionPlanId
+    RetailCarLoanProductInstanceTransactionResponse:
+      title: RetailCarLoanProductInstanceTransactionResponse
+      description: Данные лмд-объекта транзакции
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanProductInstanceTransactionObject:
+              type: string
+              description: Лмд-объект транзакции
+            productInstanceTransactionId:
+              type: string
+              description: Идентификатор транзакции
+              minLength: 1              
+            moneyTransferInstructionId:
+              type: string
+              description: Идентификатор инструкции на перевод денежных средств
+              minLength: 1
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1            
+          required:
+            - productInstanceTransactionId         
+            - moneyTransferInstructionId            
+    LmdObjectsSearchingByBaseLmdObjectDto:
+      title: LmdObjectsSearchingByBaseLmdObjectDto
+      type: object
+      description: Объект получения связанных лмд-объектов по Id базового лмд-объекта
+      additionalProperties: false
+      properties:
+        baseObjectId:
+          type: string
+          description: Идентификатор базового объекта
+          minLength: 1
+        baseObjectType:
+          type: string
+          description: Тип базового объекта
+          enum: [
+            "RetailCarLoanApplication",
+            "RetailCarLoanAgreement",
+            "RetailCarLoanServiceRequest",
+            "RetailCarLoanDeal",
+            "RetailCarLoanLeadEventOnHookUp",
+            "RetailCarLoanLead",
+            "RetailCarLoanServiceRequestExecutionPlan",
+            "RetailCarLoanMoneyTransferInstruction"            
+          ]
+        isObjectsRequiredInResponse:
+          $ref: '#/components/schemas/IsObjectsRequiredInResponse'
+        onlySaleProcessInvolved: 
+          $ref: '#/components/schemas/OnlySaleProcessInvolved' 
+        relatedTypesOfObjectsRequiredInResponse:
+          type: array
+          description: Массив типов связанных объектов ЛМД, инкременты последних версий которых требуются в ответе с базовым
+          items:
+            $ref: '#/components/schemas/LmdObjectType'
+      required:
+        - baseObjectId
+        - baseObjectType
+    DataLmdObjectResponseDto:
+      title: DataLmdObjectResponseDto
+      type: object
+      description: 'Исходящий объект данных ЛМД-объекта'
+      additionalProperties: false
+      properties:
+        lmdObjectType:
+          $ref: '#/components/schemas/LmdObjectType'
+        objectVersion:
+          type: integer
+          description: Версия объекта
+        schemaVersion:
+          type: string
+          description: Версия схемы
+          minLength: 1
+        deletionDate:
+          type: string
+          format: date
+          description: Дата удаления записи
+        saleProcessInvolved:
+          type: boolean
+          description: Признак вовлечения инкремента ЛМД-объекта в процесс продажи
+      discriminator:
+        propertyName: lmdObjectType
+        mapping:
+          'RetailCarLoanApplication': '#/components/schemas/RetailCarLoanApplicationResponse'
+          'RetailCarLoanAgreement': '#/components/schemas/RetailCarLoanAgreementResponse'
+          'RetailCarLoanServiceRequest': '#/components/schemas/RetailCarLoanServiceRequestResponse'
+          'RetailCarLoanParticipant': '#/components/schemas/RetailCarLoanParticipantResponse'
+          'RetailCarLoanProductLoan': '#/components/schemas/RetailCarLoanProductLoanResponse'
+          'RetailCarLoanCollateral': '#/components/schemas/RetailCarLoanCollateralResponse'
+          'RetailCarLoanService': '#/components/schemas/RetailCarLoanServiceResponse'
+          'RetailCarLoanProductInsurance': '#/components/schemas/RetailCarLoanProductInsuranceResponse'
+          'RetailCarLoanVehicle': '#/components/schemas/RetailCarLoanVehicleResponse'
+          'RetailCarLoanDeal': '#/components/schemas/RetailCarLoanDealResponse'
+          'RetailCarLoanLeadEventOnHookUp': '#/components/schemas/RetailCarLoanLeadEventOnHookUpResponse'
+          'RetailCarLoanLead': '#/components/schemas/RetailCarLoanLeadResponse'
+          'RetailCarLoanEmployeeActionEventApplication': '#/components/schemas/RetailCarLoanEmployeeActionEventApplicationResponse'
+          'RetailCarLoanEmployeeActionEventDeal': '#/components/schemas/RetailCarLoanEmployeeActionEventDealResponse'
+          'RetailCarLoanServiceRequestExecutionPlan': '#/components/schemas/	RetailCarLoanServiceRequestExecutionPlanResponse'
+          'RetailCarLoanMoneyTransferInstruction': '#/components/schemas/RetailCarLoanMoneyTransferInstructionResponse'
+          'RetailCarLoanProductInstanceTransaction': '#/components/schemas/RetailCarLoanProductInstanceTransactionResponse'          
+      required:
+        - lmdObjectType
+        - saleProcessInvolved
+        - objectVersion
+        - schemaVersion
+    DataPropertiesLmdObjectResponseDto:
+      title: DataPropertiesLmdObjectResponseDto
+      type: object
+      description: Исходящий объект с характеристиками ЛМД-объектов
+      additionalProperties: false
+      discriminator:
+        propertyName: lmdObjectType
+        mapping:
+          'RetailCarLoanApplication': '#/components/schemas/PropertiesRetailCarLoanApplicationResponse'
+          'RetailCarLoanAgreement': '#/components/schemas/PropertiesRetailCarLoanAgreementResponse'
+          'RetailCarLoanServiceRequest': '#/components/schemas/PropertiesRetailCarLoanServiceRequestResponse'
+          'RetailCarLoanParticipant': '#/components/schemas/PropertiesRetailCarLoanParticipantResponse'
+          'RetailCarLoanProductLoan': '#/components/schemas/PropertiesRetailCarLoanProductLoanResponse'
+          'RetailCarLoanCollateral': '#/components/schemas/PropertiesRetailCarLoanCollateralResponse'
+          'RetailCarLoanService': '#/components/schemas/PropertiesRetailCarLoanServiceResponse'
+          'RetailCarLoanProductInsurance': '#/components/schemas/PropertiesRetailCarLoanProductInsuranceResponse'
+          'RetailCarLoanVehicle': '#/components/schemas/PropertiesRetailCarLoanVehicleResponse'
+          'RetailCarLoanDeal': '#/components/schemas/PropertiesRetailCarLoanDealResponse'
+          'RetailCarLoanLeadEventOnHookUp': '#/components/schemas/PropertiesRetailCarLoanLeadEventOnHookUpResponse'
+          'RetailCarLoanLead': '#/components/schemas/PropertiesRetailCarLoanLeadResponse'
+          'RetailCarLoanEmployeeActionEventApplication': '#/components/schemas/PropertiesRetailCarLoanEmployeeActionEventApplicationResponse'
+          'RetailCarLoanEmployeeActionEventDeal': '#/components/schemas/PropertiesRetailCarLoanEmployeeActionEventDealResponse'
+          'RetailCarLoanServiceRequestExecutionPlan': '#/components/schemas/PropertiesRetailCarLoanServiceRequestExecutionPlanResponse'
+          'RetailCarLoanMoneyTransferInstruction': '#/components/schemas/PropertiesRetailCarLoanMoneyTransferInstructionResponse'
+          'RetailCarLoanProductInstanceTransaction': '#/components/schemas/PropertiesRetailCarLoanProductInstanceTransactionResponse'          
+      properties:
+        lmdObjectType:
+          $ref: '#/components/schemas/LmdObjectType'
+        objectVersion:
+          type: integer
+          description: Версия объекта
+        schemaVersion:
+          type: string
+          description: Версия схемы
+          minLength: 1
+        deletionDate:
+          type: string
+          format: date
+          description: Дата удаления записи
+        saleProcessInvolved:
+          type: boolean
+          description: Признак вовлечения инкремента ЛМД-объекта в процесс продажи
+      required:
+        - lmdObjectType
+        - saleProcessInvolved
+        - objectVersion
+        - schemaVersion
+    ErrorInfoDto:
+      type: object
+      title: ErrorInfoDto
+      description: 'Сообщение с информацией по произошедшей ошибке'
+      additionalProperties: false
+      properties:
+        serviceName:
+          description: Имя сервиса
+          type: string
+          maxLength: 512
+        errorCode:
+          description: Код ошибки
+          type: string
+          maxLength: 512
+        message:
+          description: Сообщение об ошибке
+          type: string
+          maxLength: 512
+        userMessage:
+          description: Пользовательское сообщение
+          type: string
+          maxLength: 512
+        developerMessage:
+          description: Сообщение для разработчика
+          type: string
+          maxLength: 512
+    RetailCarLoanApplicationRequest:
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          description: Данные лмд-объекта заявки
+          additionalProperties: false
+          properties:
+            retailCarLoanApplicationObject:
+              type: string
+              description: Лмд-объект заявки в формате строки
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            leadId:
+              type: string
+              description: Идентификатор лида
+              minLength: 1
+          required:
+            - retailCarLoanApplicationObject
+            - applicationId
+    RetailCarLoanAgreementRequest:
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          description: Данные лмд-объекта договора
+          additionalProperties: false
+          properties:
+            retailCarLoanAgreementObject:
+              type: string
+              description: Лмд-объект договора в формате строки
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            parentAgreementId:
+              type: string
+              description: Идентификатор родительского договора
+              minLength: 1
+            dealId:
+              type: string
+              description: Идентификатор сделки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - retailCarLoanAgreementObject
+            - agreementId
+    RetailCarLoanServiceRequestRequest:
+      title: RetailCarLoanServiceRequestRequest
+      description: Данные лмд-объекта сервисного запроса
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanServiceRequestObject:
+              type: string
+              description: Лмд-объект запроса на обслуживание в формате строки
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - retailCarLoanServiceRequestObject
+            - serviceRequestId
+    RetailCarLoanParticipantRequest:
+      title: RetailCarLoanParticipantRequest
+      description: Данные лмд-объекта участников
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanParticipantObject:
+              type: string
+              description: Лмд-объект участников в формате строки
+            participantId:
+              type: string
+              description: Идентификатор участника
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - retailCarLoanParticipantObject
+            - participantId
+    RetailCarLoanProductLoanRequest:
+      title: RetailCarLoanProductLoanRequest
+      description: Данные лмд-объекта продукта автокредита
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanProductLoanObject:
+              type: string
+              description: Лмд-объект продукта автокредита в формате строки
+            productLoanId:
+              type: string
+              description: Идентификатор продукта автокредита
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - retailCarLoanProductLoanObject
+            - productLoanId
+            - applicationId
+    RetailCarLoanCollateralRequest:
+      title: RetailCarLoanCollateralRequest
+      description: Данные лмд-объекта обеспечения
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanCollateralObject:
+              type: string
+              description: Лмд-объект обеспечения в формате строки
+            collateralId:
+              type: string
+              description: Идентификатор обеспечения
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - retailCarLoanCollateralObject
+            - collateralId
+    RetailCarLoanServiceRequest:
+      title: RetailCarLoanServiceRequest
+      description: Данные лмд-объекта продукта доп. услуг и сервисов
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanServiceObject:
+              type: string
+              description: Лмд-объект продукта доп. услуг и сервисов в формате строки
+            serviceId:
+              type: string
+              description: Идентификатор продукта доп. услуг и сервисов
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - retailCarLoanServiceObject
+            - serviceId
+            - applicationId
+    RetailCarLoanProductInsuranceRequest:
+      title: RetailCarLoanProductInsuranceRequest
+      description: Данные лмд-объекта продукта страхования
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanProductInsuranceObject:
+              type: string
+              description: Лмд-объект продукта страхования в формате строки
+            productInsuranceId:
+              type: string
+              description: Идентификатор продукта страхования
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - retailCarLoanProductInsuranceObject
+            - productInsuranceId
+            - applicationId
+    RetailCarLoanVehicleRequest:
+      title: RetailCarLoanVehicleRequest
+      description: Данные лмд-объекта транспортного средства
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanVehicleObject:
+              type: string
+              description: Лмд-объект транспортного средства в формате строки
+            vehicleId:
+              type: string
+              description: Идентификатор транспортного средства
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+            vin:
+              type: string
+              description: Идентификационный номер транспортного средства
+              minLength: 1
+          required:
+            - retailCarLoanVehicleObject
+            - vehicleId
+    RetailCarLoanDealRequest:
+      title: RetailCarLoanDealRequest
+      description: Данные лмд-объекта сделки по автокредиту
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanDealObject:
+              type: string
+              description: Лмд-объект сделки по автокредиту в формате строки
+            dealId:
+              type: string
+              description: Идентификатор сделки по автокредиту
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - retailCarLoanDealObject
+            - dealId
+            - applicationId
+    RetailCarLoanLeadEventOnHookUpRequest:
+      title: RetailCarLoanLeadEventOnHookUpRequest
+      description: Данные лмд-объекта лида автокредита (подхват)
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanLeadEventOnHookUpObject:
+              type: string
+              description: Лмд-объект лида автокредита (подхват) в формате строки
+            leadEventOnHookupId:
+              type: string
+              description: Идентификатор лида автокредита (подхват)
+              minLength: 1
+          required:
+            - retailCarLoanLeadEventOnHookUpObject
+            - leadEventOnHookupId
+            - applicationId
+    RetailCarLoanLeadRequest:
+      title: RetailCarLoanLeadRequest
+      description: Данные лмд-объекта лида автокредита
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanLeadObject:
+              type: string
+              description: Лмд-объект лида автокредита в формате строки
+            leadId:
+              type: string
+              description: Идентификатор лида
+              minLength: 1
+            leadEventOnHookupId:
+              type: string
+              description: Идентификатор лида автокредита (подхват)
+              minLength: 1
+          required:
+            - retailCarLoanLeadObject
+            - leadId
+            - leadEventOnHookupId
+    RetailCarLoanEmployeeActionEventApplicationRequest:
+      title: RetailCarLoanEmployeeActionEventApplicationRequest
+      description: Данные лмд-объекта действия сотрудника по заявке на автокредит
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanEmployeeActionEventApplicationObject:
+              type: string
+              description: Лмд-объект действия сотрудника по заявке на автокредит
+            employeeActionEventApplicationId:
+              type: string
+              description: Идентификатор действия сотрудника по заявке на автокредит в формате строки
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+          required:
+            - retailCarLoanEmployeeActionEventApplicationObject
+            - employeeActionEventApplicationId
+            - applicationId
+    RetailCarLoanEmployeeActionEventDealRequest:
+      title: RetailCarLoanEmployeeActionEventDealRequest
+      description: Данные лмд-объекта действия сотрудника по сделке на автокредит
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanEmployeeActionEventDealObject:
+              type: string
+              description: Лмд-объект действия сотрудника по сделке на автокредит
+            employeeActionEventDealId:
+              type: string
+              description: Идентификатор действия сотрудника по сделке на автокредит в формате строки
+              minLength: 1
+            dealId:
+              type: string
+              description: Идентификатор сделки
+              minLength: 1
+          required:
+            - retailCarLoanEmployeeActionEventDealObject
+            - employeeActionEventDealId
+            - dealId
+    RetailCarLoanServiceRequestExecutionPlanRequest:
+      title: RetailCarLoanServiceRequestExecutionPlanRequest
+      description: Данные лмд-объекта плана исполнения по финансовой операции
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanServiceRequestExecutionPlanObject:
+              type: string
+              description: Лмд-объект плана исполнения по финансовой операции
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - retailCarLoanServiceRequestExecutionPlanObject
+            - serviceRequestExecutionPlanId
+    RetailCarLoanMoneyTransferInstructionRequest:
+      title: RetailCarLoanMoneyTransferInstructionRequest
+      description: Данные лмд-объекта инструкции на перевод денежных средств
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanMoneyTransferInstructionObject:
+              type: string
+              description: Лмд-объект инструкции на перевод денежных средств
+            moneyTransferInstructionId:
+              type: string
+              description: Идентификатор инструкции на перевод денежных средств
+              minLength: 1
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1              
+          required:
+            - retailCarLoanMoneyTransferInstructionObject
+            - moneyTransferInstructionId
+            - serviceRequestExecutionPlanId
+    RetailCarLoanProductInstanceTransactionRequest:
+      title: RetailCarLoanProductInstanceTransactionRequest
+      description: Данные лмд-объекта транзакции
+      allOf:
+        - $ref: '#/components/schemas/DataLmdObjectRequestDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            retailCarLoanProductInstanceTransactionObject:
+              type: string
+              description: Лмд-объект транзакции
+            productInstanceTransactionId:
+              type: string
+              description: Идентификатор транзакции
+              minLength: 1              
+            moneyTransferInstructionId:
+              type: string
+              description: Идентификатор инструкции на перевод денежных средств
+              minLength: 1
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1
+          required:
+            - retailCarLoanProductInstanceTransactionObject
+            - productInstanceTransactionId
+            - moneyTransferInstructionId          
+    PropertiesRetailCarLoanApplicationResponse:
+      title: PropertiesRetailCarLoanApplicationResponse
+      description: Характеристики лмд-объекта заявки
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            leadId:
+              type: string
+              description: Идентификатор лида
+              minLength: 1
+          required:
+            - applicationId
+    PropertiesRetailCarLoanAgreementResponse:
+      title: PropertiesRetailCarLoanAgreementResponse
+      description: Характеристики лмд-объекта договора
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            dealId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+            parentAgreementId:
+              type: string
+              description: Идентификатор родительского договора
+              minLength: 1
+          required:
+            - agreementId
+    PropertiesRetailCarLoanServiceRequestResponse:
+      title: PropertiesRetailCarLoanServiceRequestResponse
+      description: Характеристики лмд-объекта запроса на обслуживание
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - serviceRequestId
+    PropertiesRetailCarLoanParticipantResponse:
+      title: PropertiesRetailCarLoanParticipantResponse
+      description: Характеристики лмд-объекта участника
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            participantId:
+              type: string
+              description: Идентификатор участника
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - participantId
+    PropertiesRetailCarLoanProductLoanResponse:
+      title: PropertiesRetailCarLoanProductLoanResponse
+      description: Характеристики лмд-объекта продукта автокредита
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            productLoanId:
+              type: string
+              description: Идентификатор продукта автокредита
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - productLoanId
+            - applicationId
+    PropertiesRetailCarLoanCollateralResponse:
+      title: PropertiesRetailCarLoanCollateralResponse
+      description: Характеристики лмд-объекта обеспечения
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            collateralId:
+              type: string
+              description: Идентификатор обеспечения
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - collateralId
+    PropertiesRetailCarLoanServiceResponse:
+      title: PropertiesRetailCarLoanServiceResponse
+      description: Характеристики лмд-объекта продукта доп. услуг и сервисов
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            serviceId:
+              type: string
+              description: Идентификатор продукта доп. услуг и сервисов
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - serviceId
+            - applicationId
+    PropertiesRetailCarLoanProductInsuranceResponse:
+      title: PropertiesRetailCarLoanProductInsuranceResponse
+      description: Характеристики лмд-объекта продукта страхования
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            productInsuranceId:
+              type: string
+              description: Идентификатор продукта страхования
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - productInsuranceId
+            - applicationId
+    PropertiesRetailCarLoanVehicleResponse:
+      title: PropertiesRetailCarLoanVehicleResponse
+      description: Характеристики лмд-объекта транспортного средства
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            vehicleId:
+              type: string
+              description: Идентификатор транспортного средства
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+            vin:
+              type: string
+              description: ВИН
+              minLength: 1
+          required:
+            - vehicleId
+    PropertiesRetailCarLoanDealResponse:
+      title: PropertiesRetailCarLoanDealResponse
+      description: Характеристики лмд-объекта сделки по автокредиту
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            dealId:
+              type: string
+              description: Идентификатор сделки по автокредиту
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            agreementId:
+              type: string
+              description: Идентификатор договора
+              minLength: 1
+          required:
+            - dealId
+            - applicationId
+    PropertiesRetailCarLoanLeadEventOnHookUpResponse:
+      title: PropertiesRetailCarLoanLeadEventOnHookUpResponse
+      description: Характеристики лмд-объекта лида автокредита (подхват)
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            leadEventOnHookupId:
+              type: string
+              description: Идентификатор лида автокредита (подхват)
+              minLength: 1
+          required:
+            - leadEventOnHookupId
+    PropertiesRetailCarLoanLeadResponse:
+      title: PropertiesRetailCarLoanLeadResponse
+      description: Характеристики лмд-объекта лида автокредита
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            leadId:
+              type: string
+              description: Идентификатор лида
+              minLength: 1
+            leadEventOnHookupId:
+              type: string
+              description: Идентификатор лида автокредита (подхват)
+              minLength: 1
+          required:
+            - leadId
+            - leadEventOnHookupId
+    PropertiesRetailCarLoanEmployeeActionEventApplicationResponse:
+      title: PropertiesRetailCarLoanEmployeeActionEventApplicationResponse
+      description: Характеристики лмд-объекта действия сотрудника по заявке на автокредит
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            employeeActionEventApplicationId:
+              type: string
+              description: Идентификатор действия сотрудника по заявке на автокредит
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+          required:
+            - employeeActionEventApplicationId
+            - applicationId
+    PropertiesRetailCarLoanEmployeeActionEventDealResponse:
+      title: PropertiesRetailCarLoanEmployeeActionEventDealResponse
+      description: Характеристики лмд-объекта действия сотрудника по сделке на автокредит
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            employeeActionEventDealId:
+              type: string
+              description: Идентификатор действия сотрудника по сделке на автокредит
+              minLength: 1
+            dealId:
+              type: string
+              description: Идентификатор сделки
+              minLength: 1
+          required:
+            - employeeActionEventDealId
+            - dealId
+    PropertiesRetailCarLoanServiceRequestExecutionPlanResponse:
+      title: PropertiesRetailCarLoanServiceRequestExecutionPlanResponse
+      description: Характеристики лмд-объекта плана исполнения по финансовой операции
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1
+            serviceRequestId:
+              type: string
+              description: Идентификатор запроса на обслуживание
+              minLength: 1
+          required:
+            - serviceRequestExecutionPlanId
+    PropertiesRetailCarLoanMoneyTransferInstructionResponse:
+      title: PropertiesRetailCarLoanMoneyTransferInstructionResponse
+      description: Характеристики лмд-объекта инструкции на перевод денежных средств
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            moneyTransferInstructionId:
+              type: string
+              description: Идентификатор инструкции на перевод денежных средств
+              minLength: 1
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1
+            applicationId:
+              type: string
+              description: Идентификатор заявки
+              minLength: 1              
+          required:
+            - moneyTransferInstructionId
+            - serviceRequestExecutionPlanId
+    PropertiesRetailCarLoanProductInstanceTransactionResponse:
+      title: PropertiesRetailCarLoanProductInstanceTransactionResponse
+      description: Характеристики лмд-объекта транзакции
+      allOf:
+        - $ref: '#/components/schemas/DataPropertiesLmdObjectResponseDto'
+        - type: object
+          additionalProperties: false
+          properties:
+            productInstanceTransactionId:
+              type: string
+              description: Идентификатор транзакции
+              minLength: 1          
+            moneyTransferInstructionId:
+              type: string
+              description: Идентификатор инструкции на перевод денежных средств
+              minLength: 1
+            serviceRequestExecutionPlanId:
+              type: string
+              description: Идентификатор плана исполнения по финансовой операции
+              minLength: 1
+          required:
+            - productInstanceTransactionId
+            - moneyTransferInstructionId         
+    LmdObjectType:
+      title: LmdObjectType
+      type: string
+      enum: [
+        "RetailCarLoanApplication",
+        "RetailCarLoanAgreement",
+        "RetailCarLoanServiceRequest",
+        "RetailCarLoanParticipant",
+        "RetailCarLoanProductLoan",
+        "RetailCarLoanCollateral",
+        "RetailCarLoanService",
+        "RetailCarLoanProductInsurance",
+        "RetailCarLoanVehicle",
+        "RetailCarLoanDeal",
+        "RetailCarLoanLeadEventOnHookUp",
+        "RetailCarLoanLead",
+        "RetailCarLoanEmployeeActionEventApplication",
+        "RetailCarLoanEmployeeActionEventDeal",
+        "RetailCarLoanServiceRequestExecutionPlan",
+        "RetailCarLoanMoneyTransferInstruction",
+        "RetailCarLoanProductInstanceTransaction"
+      ]
+      description: Тип лмд-объекта
+    OnlySaleProcessInvolved: 
+        title: OnlySaleProcessInvolved
+        type: boolean
+        default: false          
+        description: Признак необходимости получения инкрементов ЛМД-объектов, вовлечённых в процесс продажи  
+    IsObjectsRequiredInResponse:
+        title: IsObjectsRequiredInResponse   
+        type: boolean
+        default: true
+        description: Признак необходимости получения данных самих ЛМД-объектов
+    AgreementRelatedLmdObjectType:
+      title: AgreementRelatedLmdObjectType
+      type: string
+      enum: [
+        "RetailCarLoanAgreement",
+        "RetailCarLoanServiceRequest",
+        "RetailCarLoanProductLoan",
+        "RetailCarLoanCollateral",
+        "RetailCarLoanService",
+        "RetailCarLoanProductInsurance",
+        "RetailCarLoanVehicle",
+        "RetailCarLoanDeal",
+      ]
+      description: Тип лмд-объекта
