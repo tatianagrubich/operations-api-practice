@@ -97,4 +97,3 @@ components:
   # Conflict409, TooManyRequests429,
   # InternalServerError500, ServiceUnavailable503
   responses: {}
-  
