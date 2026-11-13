@@ -1,0 +1,227 @@
+[33mcommit 580e5958676c49b51d88f663eeae25c91ba59c5d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/team-b[m[33m, [m[1;31morigin/feature/team-b[m[33m)[m
+Author: Petr <lockrise@gmail.com>
+Date:   Wed Nov 11 19:52:57 2026 +0300
+
+    Практическое задание 2, команда 2: состав полей для системного списочного представления проводок АБС
+
+[33mcommit 8d1ce064ccb9c60073b567aa90db190a1bbb4026[m
+Author: PetrMich <lockrise@gmail.com>
+Date:   Wed Nov 11 11:25:08 2026 +0300
+
+    Запушены материалы с первого заняти, пока без корректировки по сообщению в телеграмме
+
+[33mcommit 4d7d1962a5993058c85a1db4f3d4d556d20f2cdf[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Nov 8 20:56:37 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit bc638222409d06e97e1d19dde304d25a0a611caa[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Tue Nov 3 09:24:08 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 57bef62c0f29a270426b30f48212918a450d859f[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Tue Nov 3 09:15:21 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 27b13470fff1bf8fd6fbec60417f4d39580e3eb2[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Tue Nov 3 09:03:22 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 012a321b52d6bfc4028a8ca49535d2467e52289c[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Tue Nov 3 08:41:34 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit e69744563ad956449810e4c4932829b321f51d41[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Mon Nov 2 20:54:57 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 951ba052cbd1700cfa8dcb3b141589d9f69fc109[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Mon Nov 2 20:38:39 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 70c7927ebee4107b9f5438e6d4bf9f6b50c3a4e3[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Mon Nov 2 19:31:17 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 9494b141807c68b113b73ff5d08c34805738ba97[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sat Oct 31 11:16:47 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit a2774aee082602d92cbe9864780f2ca461193730[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sat Oct 31 11:00:26 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit a87fa5092bd30c659639e68af85a1c1d4128d05f[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Thu Oct 22 23:46:44 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit fddda705e7228356cbaafa0506738300fabae76e[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Thu Oct 22 23:45:28 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 1ba3baaa428749a53fa568f3cc04719a3a77ea78[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Thu Oct 22 22:09:37 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 28d95603cbf8ab090b0869c864fe34ac6d449c86[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Thu Oct 22 22:08:26 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 3918a86a84122ce571e33bed40fa0a67c50379b8[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 21:08:41 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 65fa3ae8fa6983e86e2c48145341059e44acf3f5[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:44:31 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 1b48a1948eef329542662a24e29a46cac9b85134[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:44:01 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 439121f7294b811f02dc6bbfb2c92069e131534e[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:42:48 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 6673f1ddde9ac229e24b327053e5b603b653eafa[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:40:51 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 44d2008613f34030fa744cb7565b796a1aa482b0[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:39:55 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit f849bf0e8fd752c2aba56cb94df309d1dcc4afd9[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:37:40 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 1b272e53cf035200546839d3c1e8a2de6f4fde09[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:36:11 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 86f82fef8fa460fd15f0be5f2bb6d560b062e623[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:31:30 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit b16a5b16904ddbd4d835dc979a4b0d9bd8c1198b[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:30:08 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 280f1ef7ef0a330db4c9179a437eca1dfb4a061a[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:29:26 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 666525cdc19cbc9f4f330da209d5c2e6d64910f4[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:27:34 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit d8fac25e8e5a28b592b6a1012ee4639b52ff38f3[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 14:21:21 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 63f99a142e2734c28f0876b1391e908d9e682786[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 13:45:00 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit e5f13fb872c698fae95d4850e44c0660938ce5f1[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 13:43:37 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit ae4842359ee3233297abedd66ea0db017f20fa2c[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 13:28:44 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 6f76c000420935aa444cd6d2b39f145b672ac577[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 13:27:31 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 281f45c6654db84ccf31835078e721d753ac363e[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 13:25:49 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 43538710a4b19a111368032f1a2343f7fe0878ed[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 13:23:54 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 89e579db3b9126966bb74fdcd461e558404688c4[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 12:55:28 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 423e13a024c402285b25c252533a50ad278d14f1[m
+Author: Tatiana <t.grubich@astondevs.ru>
+Date:   Sun Oct 18 12:53:28 2026 +0300
+
+    chore: инициализация репозитория, структура папок, пробный файл
+
+[33mcommit 7917c91d6f7baec1848302adb95a82b6422ea2c0[m
+Author: tatianagrubich <79927086+tatianagrubich@users.noreply.github.com>
+Date:   Sun Oct 18 12:42:40 2026 +0300
+
+    Initial commit
