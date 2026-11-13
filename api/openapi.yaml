@@ -1,8 +1,99 @@
-openapi: 3.0.0
+# =====================================================================
+# ШАБЛОН OPENAPI 3.0 ДЛЯ ПРАКТИКИ
+# Что делать: заполните секции paths и components, опираясь на ваш
+# REST-дизайн (Занятие 1), разработанные ДТО (Занятие 2) и корпоративный стандарт REST.
+# =====================================================================
+
+openapi: 3.0.3
+
+# ---------------------------------------------------------------------
+# 1. МЕТАДАННЫЕ (п. 3.1, 3.2, 3.4)
+# ---------------------------------------------------------------------
 info:
-  title: Operations API
-  version: 1.0.0
-  description: API для работы с историей операций (Лента истории операций)
+  title: ___            # UpperCamelCase
+  version: ___          # SemVer 2.0
+  description: |        # Назначение, ограничения (GFM)
+    ___
+  contact:
+    name: ___
+    email: ___
+    url: ___
+
+# ---------------------------------------------------------------------
+# 2. СЕРВЕРЫ (п. 3.3, 3.4)
+# ---------------------------------------------------------------------
+# Формат: /{apim_path}/{base_path}/v{MAJOR}
+# БЕЗ слэша на конце!
+servers:
+  - url: ___
+
+# ---------------------------------------------------------------------
+# 3. ТЕГИ (п. 3.14)
+# ---------------------------------------------------------------------
+# ВАЖНО: для кодогенерации нужен РОВНО ОДИН тег на операцию.
+tags:
+  - name: ___          # Имя микросервиса
+
+# ---------------------------------------------------------------------
+# 4. ПУТИ (п. 3.6, 3.7, 3.8, 3.10)
+# ---------------------------------------------------------------------
+# Напоминания:
+# - URL: snake_case / lisp-case, без глаголов, без слэша в конце
+# - operationId: уникальный, lowerCamelCase
+# - POST/PUT/PATCH: обязательный requestBody
+# - В responses: успешные коды + обязательные ошибки
+#   (400, 422, 404 если есть {id}, 429, 500, 503)
 paths: {}
+  # /___:
+  #   get:
+  #     tags: [___]
+  #     operationId: ___
+  #     summary: ___
+  #     parameters:
+  #       - name: ___
+  #         in: ___
+  #         required: ___
+  #         schema: ___
+  #     responses:
+  #       '200':
+  #         description: ___
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/___'
+  #       '400': { $ref: '#/components/responses/BadRequest400' }
+  #       '422': { $ref: '#/components/responses/UnprocessableEntity422' }
+  #       '429': { $ref: '#/components/responses/TooManyRequests429' }
+  #       '500': { $ref: '#/components/responses/InternalServerError500' }
+  #       '503': { $ref: '#/components/responses/ServiceUnavailable503' }
+
+# ---------------------------------------------------------------------
+# 5. КОМПОНЕНТЫ (п. 3.6, 3.13, Раздел 4 — ФЛК)
+# ---------------------------------------------------------------------
 components:
+
+  # --- Параметры (lowerCamelCase) ---
+  # Path-параметры для {id}, query-параметры пагинации,
+  # заголовки (например, для идемпотентности)
+  parameters: {}
+
+  # --- Схемы (UpperCamelCase) ---
+  # Все DTO: Request, Response, List, Detail.
+  #
+  # ФЛК (Раздел 4):
+  # - string: maxLength (255 по умолч.) или enum
+  # - integer/number: minimum + maximum, format
+  # - date: pattern; date-time: format + pattern
+  # - object: additionalProperties: false
+  # - array: items + maxItems
+  #
+  # НЕ используйте allOf для наследования List/Detail!
+  # Разделяйте Request и Response.
   schemas: {}
+
+  # --- Стандартные ответы (п. 3.13) ---
+  # Обязательный минимум:
+  # BadRequest400, UnprocessableEntity422, NotFound404,
+  # Conflict409, TooManyRequests429,
+  # InternalServerError500, ServiceUnavailable503
+  responses: {}
