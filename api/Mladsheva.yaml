@@ -149,12 +149,8 @@ components:
           description: Идентификатор счета 
           minLength: 1
         status:
-      name: false
-      required: true
-      in: query
-      schema:
-        type: string
-        enum: [
-          "HOLD",
-          "SETTLED"               
-        ] 
+          type: string
+          enum: [
+            "HOLD",
+            "SETTLED"               
+          ] 
