@@ -1,15 +1,9 @@
-
 Mobile
-GET /accounts # счета клиента 
-# нарушает границы Bounded Context. мастер-системой является Core Banking. у нашей системы единственная ответственность это фиксация, фильтрация и выдача истории транзакций
-
-GET /accounts/{accountId}/operations?offset=0&limit=20&status=HOLD&startDate=''&endDate='' # операции счёта
-GET /accounts/{accountId}/operations/{operationId} # детали операции
-# для получения деталки операции нет необходимости использовать {accountId}, т.к. идентификатор операции {operationId} сам
-# по себе уникален
+1) GET /accounts/{accountId}/operations?offset=0&limit=20&status=enum:[HOLD, SETTLED]&startDate=''&endDate=''categoryText=  - поиск операций по счету клиента и дополнительным фильтрам
+2) GET /operations/{operationId}/info - краткая информация по операции
 
 CRM 
-GET /operations?accountId=123&offset=0&limit=20&status=HOLD&startDate=''&endDate=''  — операции
-GET /operations/{operationId}  — конкретная операция
+1) GET /operations?accountId=123&offset=0&limit=20&status=HOLD&startDate=''&endDate='' - поиск операций по фильтрам 
+GET /operations/{operationId}/details # детальная информация по операции
 
 
