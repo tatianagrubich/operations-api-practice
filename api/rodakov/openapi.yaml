@@ -329,9 +329,7 @@ components:
         - value
       properties:
         currency:
-          type: string
-          description: Валюта платежа
-          maxLength: 255
+          $ref: '#/components/schemas/CurrencyEnumDTO'
         value:
           type: number
           format: double
@@ -453,6 +451,7 @@ components:
       example: "RUB"
       enum: 
         - RUB
+        - USD
     CategoryEnumDTO:
       type: string
       description:  Категории трат
@@ -488,11 +487,29 @@ components:
           description: Дата и время совершения операции
           pattern: '^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):([0-5][0-9]))?$'
           maxLength: 20
-          example: "2026-11-16T17:30:00Z"          
+          example: "2026-11-16T17:30:00Z" 
         account:
           $ref: '#/components/schemas/AccountResponseDTO'
         amount:
-          $ref: '#/components/schemas/AmountResponseDTO'
+          type: array
+          items:        
+            $ref: '#/components/schemas/AmountResponseDTO'
+        currencyRate:
+          type: object
+          required:
+            - currency
+            - rate
+          properties:
+            currency:
+              $ref: '#/components/schemas/CurrencyEnumDTO'
+            rate:
+              type: number
+              format: double
+              multipleOf: 0.0001
+              minimum: 0.0001
+              maximum: 999999999999.9999
+              description: Курс валюты с точностью до 4 знаков после запятой
+              example: 92.4512
         category:
           $ref: '#/components/schemas/CategoryEnumDTO'            
         merchant:
