@@ -4,6 +4,6 @@ Mobile
 
 CRM 
 1) GET /operations?accountId=123&offset=0&limit=20&status=HOLD&startDate=''&endDate='' - поиск операций по фильтрам 
-GET /operations/{operationId}/details # детальная информация по операции
+2) GET /operations/{operationId}/details # детальная информация по операции
 
 

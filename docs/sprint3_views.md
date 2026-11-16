@@ -5,9 +5,10 @@ GET /accounts/{accountId}/operations?offset=0&limit=20&status=enum:[HOLD, SETTLE
 OperationListItem
 operationId — string — обязательный — идентификатор операции
 status — string (enum: HOLD, SETTLED) — обязательный — статус операции
+statusDescription - string - необязательный - описание статуса операции
 operationDateTime — string (date-time) — обязательный — дата и время совершения операции
 accountId — string — обязательный — идентификатор счёта
-account.maskedNumber — обязательный — номер счёта
+accountNumber — обязательный — номер счёта
 merchantName — string — необязательный — название продавца
 categoryText — string — необязательный — название категории трат
 amountValue — number — обязательный — сумма операции
@@ -21,16 +22,15 @@ OperationDetail
 account — object — обязательный — сведения о счёте
 account.accountId — string — обязательный
 account.currency — string — обязательный — валюта счёта
-account.maskedNumber — обязательный — маскированное значение источника средств (показать первые 5 и последние 4 символа, середину заменить на*)
-amount — array — обязательный — массив суммы операции в разных валютах
-amount[].value — number — обязательный — значение суммы
-amount[].currency — string — обязательный — валюта суммы
-merchant — string — необязательный — название продавца
-categoryText — string — необязательный — название категории трат
+account.accountNumber — обязательный — маскированное значение источника средств (показать первые 5 и последние 4 символа, середину заменить на*)
 operation - object — обязательный — сведения о операции
-operationId — string — обязательный — идентификатор операции
-status — string (enum: HOLD, SETTLED) — обязательный — статус операции
-statusDescription - string - необязательный - описание статуса операции
-scoringDecision - object - необязательный - данные решения скоринга 
-scoringDecision.code - код решения
-scoringDecision.Description - описание решения 
+operation.operationId — string — обязательный — идентификатор операции
+operation.amounts — array — обязательный — массив объектов сумм операции
+operation.amounts[].value — number — обязательный — значение суммы
+operation.amounts[].currency — string — обязательный — валюта суммы
+operation.merchant — string — необязательный — название продавца
+operation.categoryText — string — необязательный — название категории трат
+operation.status — string (enum: HOLD, SETTLED) — обязательный — статус операции
+operation.statusDescription - string - необязательный - описание статуса операции
+operation.scoringDecision - object - необязательный - данные решения скоринга operation.scoringDecision.code - string - обязательный - код решения
+operation.scoringDecision.description - string - обязательный - описание решения 
