@@ -47,6 +47,7 @@ paths:
     get:  
       tags: 
         - Postings
+      description: Получение списка проводок
       operationId: GetPostings
       summary: Получение списка проводок
       parameters:
@@ -73,6 +74,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PostingListDTO'
+        "404":
+          description: У пользователя нет активной заявки
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+        "500":
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+        "503":
+          description: У пользователя нет активной заявки
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+        "429":
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+        "409":
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
     #   get:
   #     tags: [___]
   #     operationId: ___
@@ -130,6 +161,7 @@ components:
     PostingDTO:
       description: Информация о проводке
       type: object
+      additionalProperties: false
       required:
         - postingRef
         - conversationRate
@@ -143,7 +175,7 @@ components:
           nullable: false
           maxLength: 255
         conversationRate:
-          $ref: "#/components/schemas/conversationRateDto"
+          $ref: "#/components/schemas/ConversationRateDto"
         status: 
           description: Статус проводки
           type: string
@@ -158,7 +190,7 @@ components:
         scoringDecision:
           $ref: '#/components/schemas/ScoringDecisionDTO'
 
-    conversationRateDto:
+    ConversationRateDto:
           description: Курсы валют
           type: array
           maxItems: 2
@@ -181,6 +213,7 @@ components:
 
     AccountDTO: 
           type: object
+          additionalProperties: false
           nullable: false
           required:
             - accountNumber
@@ -189,9 +222,11 @@ components:
             accountNumber:
               description: Номер счета
               type: string
-              pattern: '^\[0-9]+$'
               nullable: false
-              maxLength: 255
+              maxLength: 20
+              minLength: 20
+              pattern: '^\d{5}\*{11}\d{4}$'
+              example: "12345***********6789"
             acclountId:
               description: Идентификатор счета
               type: string
@@ -218,11 +253,31 @@ components:
                 maxLength: 255 
             blocked:    
               description: Признак заблокированного решения          
-              type: boolean              
-      
+              type: boolean    
+
+    ErrorDTO:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+      description: Описание бизнес ошибки при выполнении запроса
+      properties:
+        code:
+          type: string
+          maxLength: 250
+        message:
+          type: string
+          description: Описание ошибки
+          example: Something goes wrong
+          maxLength: 1000
+        payload:
+          type: string
+          maxLength: 5000
+          description: Сериализованные исходные данные об ошибке
+ 
   # --- Стандартные ответы (п. 3.13) ---
   # Обязательный минимум:
   # BadRequest400, UnprocessableEntity422, NotFound404,
   # Conflict409, TooManyRequests429,
   # InternalServerError500, ServiceUnavailable503
-  responses: {}
+
