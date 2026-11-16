@@ -1,10 +1,8 @@
 extends: ["spectral:oas"]
 
 rules:
-  # === СТАНДАРТЫ ПРОЕКТИРОВАНИЯ БАНКА ===
-
   bank-paths-kebab-case:
-    description: "Все статические сегменты путей API Ленты операций должны быть написаны во множественном числе, нижнем регистре и разделяться дефисом (kebab-case). Допускаются префиксы мажорных версий (v1/v2). Параметры в { } игнорируются."
+    description: "Все статические сегменты путей API должны быть во множественном числе, нижнем регистре и разделяться дефисом (kebab-case). Допускаются префиксы версий (v1/v2)."
     severity: error
     given: $.paths[*]~
     then:
@@ -13,7 +11,7 @@ rules:
         match: "^(\\/v[0-9]+)?(\\/[a-z0-9]+(-[a-z0-9]+)*|\\/{[a-zA-Z0-9]+})+$"
 
   bank-no-crud-in-paths:
-    description: "В URL путей запрещено использовать CRUD-глаголы и RPC-стиль (get, create, update, delete). Исключение: /apply-decision — легитимная операция согласно п. 3.8 стандарта банка."
+    description: "В URL путей запрещено использовать CRUD-глаголы и RPC-стиль. Исключение: /apply-decision (п. 3.8 стандарта)."
     severity: error
     given: $.paths[*]~
     then:
@@ -22,7 +20,7 @@ rules:
         notMatch: "\\/(get|create|update|delete|show|fetch|add)[A-Z]?([^\\/]*)"
 
   bank-no-trailing-slash:
-    description: "Использование косой черты (trailing slash) в конце URL категорически запрещено."
+    description: "Trailing slash в конце URL запрещен."
     severity: error
     given: $.paths[*]~
     then:
@@ -31,7 +29,7 @@ rules:
         notMatch: ".+\\/$"
 
   bank-properties-camel-case:
-    description: "Все JSON-атрибуты и query-параметры Ленты обязаны использовать регистр lowerCamelCase."
+    description: "Все JSON-атрибуты и query-параметры обязаны использовать lowerCamelCase."
     severity: error
     given: 
       - "$.components.schemas.*.properties.*~"
@@ -42,7 +40,7 @@ rules:
         match: "^[a-z][a-zA-Z0-9]*$"
 
   bank-schemas-upper-camel-case:
-    description: "Названия переиспользуемых компонентов (schemas) должны использовать регистр UpperCamelCase."
+    description: "Названия схем (components/schemas) должны использовать UpperCamelCase."
     severity: error
     given: $.components.schemas.*~
     then:
@@ -51,7 +49,7 @@ rules:
         match: "^[A-Z][a-zA-Z0-9]*$"
 
   bank-list-item-flat-structure:
-    description: "Списочные схемы (ListItem) для обеспечения SLA 150 мс не должны содержать глубоких вложенных объектов (разрешено не более 2 уровней объектов)."
+    description: "Списочные схемы (ListItem) для SLA 150 мс не должны содержать глубоких вложенных объектов (максимум 2 уровня)."
     severity: warn
     given: "$.components.schemas[?(@property.match(/ListItem/))].properties.*.properties.*.properties"
     then:
@@ -60,25 +58,33 @@ rules:
         max: 0
 
   bank-post-idempotency-key-required:
-    description: "Любой изменяющий операцию метод POST обязан содержать обязательный заголовок Idempotency-Key (согласно п. 3.8 стандарта банка)."
+    description: "POST-методы обязаны содержать обязательный заголовок Idempotency-Key (п. 3.8)."
     severity: error
     given: $.paths[*].post.parameters[?(@.in == 'header' && @.name == 'Idempotency-Key')]
     then:
       field: required
       function: truthy
 
-  # === ТРЕБОВАНИЯ ИБ И ФЛК БАНКА ===
+  bank-pagination-format:
+    description: "Ответы списков должны соответствовать стандарту: массив data и объект paging (п. 3.10)."
+    severity: error
+    given: "$.components.schemas[?(@property.match(/Page|Response/))].properties"
+    then:
+      - field: data
+        function: defined
+      - field: paging
+        function: defined
 
   bank-string-max-length-required:
-    description: "Согласно п. 3.9 стандарта банка, для всех полей типа string верхняя граница длины должна быть жёстко зафиксирована через maxLength."
+    description: "Для всех полей string должна быть зафиксирована максимальная длина (maxLength), кроме дат и uuid."
     severity: error
-    given: $.components.schemas..properties[?(@.type === 'string' && @.format !== 'date-time' && @.format !== 'uuid')]
+    given: $.components.schemas..properties[?(@.type === 'string' && @.format !== 'date-time' && @.format !== 'uuid' && @.format !== 'date')]
     then:
       field: maxLength
       function: defined
 
   bank-numeric-limits-required:
-    description: "Согласно п. 3.9 стандарта банка, для числовых и целочисленных полей обязательна декларация границ minimum и maximum."
+    description: "Для числовых полей обязательны границы minimum и maximum."
     severity: error
     given: $.components.schemas..properties[?(@.type === 'number' || @.type === 'integer')]
     then:
@@ -87,14 +93,50 @@ rules:
       - field: maximum
         function: defined
 
-  bank-account-masking-pattern-required:
-    description: "Требование ИБ: номера счетов (accountNumber) обязаны проходить строгую валидацию по маскированному шаблону (5 цифр + 11 звездочек + 4 цифры)."
+  bank-no-invalid-decimal:
+    description: "В OpenAPI 3.0 нет format: decimal. Используйте double или string с pattern для денег."
     severity: error
-    given: $.components.schemas..properties[?(@property === 'accountNumber')]
+    given: "$..properties[?(@.format === 'decimal')]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            format:
+              not:
+                const: decimal
+
+  bank-objects-no-additional-properties:
+    description: "Для всех типов object обязательно указывать additionalProperties: false (ФЛК)."
+    severity: error
+    given: "$..[?(@.type === 'object' && @.properties)]"
+    then:
+      field: additionalProperties
+      function: defined
+      functionOptions:
+        values: [false]
+
+  bank-error-format:
+    description: "Схема Error должна содержать code и title, и не должна содержать message (п. 3.13.2)."
+    severity: error
+    given: "$.components.schemas.Error.properties"
+    then:
+      - field: code
+        function: defined
+      - field: title
+        function: defined
+      - field: message
+        function: undefined
+
+  bank-account-masking-pattern-required:
+    description: "Требование ИБ: поля с номерами счетов (accountNumber, maskedNumber, maskedAccount) обязаны валидироваться по шаблону маски (5 цифр + 11 звездочек + 4 цифры)."
+    severity: error
+    given: "$.components.schemas..properties[?(@property.match(/accountNumber|maskedNumber|maskedAccount/i))]"
     then:
       - field: pattern
         function: defined
       - field: pattern
         function: pattern
         functionOptions:
-          match: '^\^40817\\\*\{11\}\[0-9\]\{4\}\$$'
+          match: '^\^[0-9]{5}\*{11}[0-9]{4}\$$'
