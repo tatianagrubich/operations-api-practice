@@ -172,7 +172,7 @@ rules:
       - field: pattern
         function: pattern
         functionOptions:
-          match: '^\^[0-9]{5}\*{11}[0-9]{4}\$$'
+          match: '^\^\[0-9\]\{5\}\\\*{11\}\[0-9\]\{4\}\$$'
 
   bank-list-item-flat:
     description: "High Load: Списочные схемы (ListItem) без глубокой вложенности."
