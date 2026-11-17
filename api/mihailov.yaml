@@ -1,0 +1,283 @@
+# =====================================================================
+# ШАБЛОН OPENAPI 3.0 ДЛЯ ПРАКТИКИ
+# Что делать: заполните секции paths и components, опираясь на ваш
+# REST-дизайн (Занятие 1), разработанные ДТО (Занятие 2) и корпоративный стандарт REST.
+# =====================================================================
+
+openapi: 3.0.3
+
+# ---------------------------------------------------------------------
+# 1. МЕТАДАННЫЕ (п. 3.1, 3.2, 3.4)
+# ---------------------------------------------------------------------
+info:
+  title: 1388.alpp-CoreBankAPI-s-rest-v1            # UpperCamelCase
+  version: SemVer 1.0         # SemVer 2.0
+  description: API для управления банковскими проводками и операциями        # Назначение, ограничения (GFM)
+  contact:
+    name: Mihailov Petr
+    email: lockrise@gmail.com
+    url: https://localhost:8080:api/core/core-main/v1
+
+# ---------------------------------------------------------------------
+# 2. СЕРВЕРЫ (п. 3.3, 3.4)
+# ---------------------------------------------------------------------
+# Формат: /{apim_path}/{base_path}/v{MAJOR}
+# БЕЗ слэша на конце!
+servers:
+  - url: https://localhost:8080:api/core/core-main/v1 
+
+# ---------------------------------------------------------------------
+# 3. ТЕГИ (п. 3.14)
+# ---------------------------------------------------------------------
+# ВАЖНО: для кодогенерации нужен РОВНО ОДИН тег на операцию.
+tags:
+  - name: Postings          # Имя микросервиса
+    description: Методы для управления  банковскими проводками
+# ---------------------------------------------------------------------
+# 4. ПУТИ (п. 3.6, 3.7, 3.8, 3.10)
+# ---------------------------------------------------------------------
+# Напоминания:
+# - URL: snake_case / lisp-case, без глаголов, без слэша в конце
+# - operationId: уникальный, lowerCamelCase
+# - POST/PUT/PATCH: обязательный requestBody
+# - В responses: успешные коды + обязательные ошибки
+#   (400, 422, 404 если есть {id}, 429, 500, 503)
+paths: 
+  /postings:
+    get:  
+      tags: 
+        - Postings
+      description: Получение списка проводок
+      operationId: GetPostings
+      summary: Получение списка проводок
+      parameters:
+        - name: page
+          in: query
+          required: false       
+          schema:
+            type: integer
+            format: int32
+            maximum: 1000000
+            minimum: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            maximum: 1000000
+            minimum: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostingListDTO'
+        "404":
+          description: У пользователя нет активной заявки
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+        "500":
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+        "503":
+          description: У пользователя нет активной заявки
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+        "429":
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+        "409":
+          description: Something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDTO"
+    #   get:
+  #     tags: [___]
+  #     operationId: ___
+  #     summary: ___
+  #     parameters:
+  #       - name: ___
+  #         in: ___
+  #         required: ___
+  #         schema: ___
+  #     responses:
+  #       '200':
+  #         description: ___
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/___'
+  #       '400': { $ref: '#/components/responses/BadRequest400' }
+  #       '422': { $ref: '#/components/responses/UnprocessableEntity422' }
+  #       '429': { $ref: '#/components/responses/TooManyRequests429' }
+  #       '500': { $ref: '#/components/responses/InternalServerError500' }
+  #       '503': { $ref: '#/components/responses/ServiceUnavailable503' }
+
+# ---------------------------------------------------------------------
+# 5. КОМПОНЕНТЫ (п. 3.6, 3.13, Раздел 4 — ФЛК)
+# ---------------------------------------------------------------------
+components:
+
+  # --- Параметры (lowerCamelCase) ---
+  # Path-параметры для {id}, query-параметры пагинации,
+  # заголовки (например, для идемпотентности)
+  parameters: {}
+
+  # --- Схемы (UpperCamelCase) ---
+  # Все DTO: Request, Response, List, Detail.
+  #
+  # ФЛК (Раздел 4):
+  # - string: maxLength (255 по умолч.) или enum
+  # - integer/number: minimum + maximum, format
+  # - date: pattern; date-time: format + pattern
+  # - object: additionalProperties: false
+  # - array: items + maxItems
+  #
+  # НЕ используйте allOf для наследования List/Detail!
+  # Разделяйте Request и Response.
+  schemas: 
+    PostingListDTO:
+      description: Массив проводок
+      type: array
+      maxItems: 10000000
+      minItems: 1
+      items: 
+        $ref: '#/components/schemas/PostingDTO'
+      nullable: true
+
+    PostingDTO:
+      description: Информация о проводке
+      type: object
+      additionalProperties: false
+      required:
+        - postingRef
+        - conversationRate
+        - status
+        - account
+      properties:
+        postingRef:
+          description: Идентификтор проводки
+          type: string
+          pattern: uuid
+          nullable: false
+          maxLength: 255
+        conversationRate:
+          $ref: "#/components/schemas/ConversationRateDto"
+        status: 
+          description: Статус проводки
+          type: string
+          pattern: '^[a-zA-Z]+$'
+          nullable: false
+          maxLength: 255
+          enum:
+            - HOLD
+            - SETTLED
+        account: 
+          $ref: '#/components/schemas/AccountDTO'
+        scoringDecision:
+          $ref: '#/components/schemas/ScoringDecisionDTO'
+
+    ConversationRateDto:
+          description: Курсы валют
+          type: array
+          maxItems: 2
+          minItems: 2
+          nullable: false
+          items: 
+            properties:
+              currency:
+                description: Код валюты
+                type: string
+                pattern: '^[a-zA-Z]+$'
+                nullable: false
+                maxLength: 255
+              amount:
+                type: number
+                format: float
+                multipleOf: 0.01
+                maximum: 1000000
+                minimum: 0
+
+    AccountDTO: 
+          type: object
+          additionalProperties: false
+          nullable: false
+          required:
+            - accountNumber
+            - acclountId
+          properties:
+            accountNumber:
+              description: Номер счета
+              type: string
+              nullable: false
+              maxLength: 20
+              minLength: 20
+              pattern: '^\d{5}\*{11}\d{4}$'
+              example: "12345***********6789"
+            acclountId:
+              description: Идентификатор счета
+              type: string
+              pattern: uuid
+              nullable: false
+              maxLength: 255
+
+    
+    ScoringDecisionDTO:
+          type: object
+          nullable: false
+          required:
+            - blocked
+          properties:
+            risksigns:
+              description: Признаки риска
+              type: array
+              maxItems: 30
+              minItems: 1
+              nullable: true
+              items:
+                type: string
+                pattern: '^[a-zA-Z]+$'
+                maxLength: 255 
+            blocked:    
+              description: Признак заблокированного решения          
+              type: boolean    
+
+    ErrorDTO:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+      description: Описание бизнес ошибки при выполнении запроса
+      properties:
+        code:
+          type: string
+          maxLength: 250
+        message:
+          type: string
+          description: Описание ошибки
+          example: Something goes wrong
+          maxLength: 1000
+        payload:
+          type: string
+          maxLength: 5000
+          description: Сериализованные исходные данные об ошибке
+ 
+  # --- Стандартные ответы (п. 3.13) ---
+  # Обязательный минимум:
+  # BadRequest400, UnprocessableEntity422, NotFound404,
+  # Conflict409, TooManyRequests429,
+  # InternalServerError500, ServiceUnavailable503
+
