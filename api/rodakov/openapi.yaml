@@ -6,7 +6,7 @@ info:
   contact:
     name: Родаков Олег Ростиславович
     email: orodakov@vtb.ru
-    url: 'https://sfera.inno.local/knowledge/pages?id=1246094'
+    url: 'https://sfera.inno.local/knowledge/pages?id=2042404'
 servers:
   - url: 'https://localhost:8080/operations-api-practice/v1'
     description: LOCAL
