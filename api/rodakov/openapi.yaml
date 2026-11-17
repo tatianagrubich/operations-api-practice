@@ -13,9 +13,9 @@ servers:
 
 tags:
   - name: Accounts
-    description: Счета клиента для мобильного приложения
+    description: Счета клиента
   - name: Operations
-    description: Операции клиента для CRM
+    description: Операции клиента
 paths:
   /accounts:
     get:
@@ -51,17 +51,24 @@ paths:
           $ref: '#/components/responses/InternalServerError'
         '503':
            $ref: '#/components/responses/ServiceUnavailable'
-  /accounts/{accountId}/operations:
+  /operations:
     get:
       tags:
-        - Accounts
+        - Operations
       summary: Операции по счёту клиента
       description: Метод вызывается фронтом для получения операций по счету
       operationId: getOperationsByAccountId
       parameters:
-        - $ref: '#/components/parameters/AccountIdPathParam'
+        - name: accounId
+          in: query
+          description: Идентификатор счета
+          required: true
+          schema:
+            type: string       
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"   
         - $ref: '#/components/parameters/LimitParam' 
-        - $ref: '#/components/parameters/OffsetParam'        
+        - $ref: '#/components/parameters/OffsetParam'            
         - name: startDate
           in: query
           description: Начальная дата операции
@@ -117,21 +124,20 @@ paths:
           $ref: '#/components/responses/InternalServerError'
         '503':
            $ref: '#/components/responses/ServiceUnavailable'
-  /operations:
+  /operations/{operationId}:
     get:
       tags:
         - Operations
-      summary: Операции по счёту
-      description: Метод вызывается фронтом для получения операций по счету
+      summary: Операция
+      description: Метод вызывается фронтом для получения операции
       operationId: getOperationsByFilter
       parameters:
-        - name: accountId
-          in: query
-          description: Идентификатор счета клиента
-          required: false
-          example: "550e8400-e29b-41d4-a716-446655440000" 
+        - name: operationId
+          in: path
+          description: Идентификатор операции
+          required: true
           schema:
-            type: string      
+            type: string         
         - $ref: '#/components/parameters/LimitParam' 
         - $ref: '#/components/parameters/OffsetParam'   
         - name: startDate
@@ -189,7 +195,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
         '503':
            $ref: '#/components/responses/ServiceUnavailable'
-  /operations/{operationId}:
+  /operations/{operationId}/detail:
     get:
       tags:
         - Operations
@@ -292,14 +298,6 @@ components:
         type: string
         format: uuid
         example: "550e8400-e29b-41d4-a716-446655440777"         
-    AccountIdPathParam:    
-      name: accountId
-      in: path
-      description: Идентификатор счета клиента
-      required: true
-      example: "550e8400-e29b-41d4-a716-446655440000" 
-      schema:
-        type: string        
     LimitParam:
       name: limit
       in: query
