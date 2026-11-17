@@ -353,21 +353,13 @@ components:
       required:
         - accountid
         - accountNumber
-        - maskedNumber
       properties:
         accountid:
           type: string
           format: uuid
           example: "550e8400-e29b-41d4-a716-446655440000"             
-          description: Идентификатор счета
+          description: Идентификатор счета 
         accountNumber:
-          type: string
-          description: Номер счета
-          pattern: '^[0-9]{20}$'
-          minLength: 20
-          maxLength: 20
-          example: "40747530000000004534"   
-        maskedNumber:
           type: string
           description: Номер счета маскированный
           pattern: '^[0-9]{5}\*{11}[0-9]{4}$'
