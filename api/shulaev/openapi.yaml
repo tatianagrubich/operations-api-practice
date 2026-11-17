@@ -1,0 +1,707 @@
+openapi: 3.0.3
+info:
+  title: BankingReadApi
+  version: 1.0.0
+  description: |-
+    Общий API для выбора счёта и просмотра истории операций в Mobile App и CRM.
+    GET /accounts обслуживает сервис счетов. Источник данных — Core Banking.
+    Методы истории обслуживает отдельный сервис истории через Data Grid.
+    Получение перечня счетов не входит в ответственность сервиса истории.
+
+    Клиент и его права определяются по Bearer-токену.
+    Сервер проверяет доступ к методу, счёту и операции.
+
+
+    Целевые показатели: до 12 000 запросов/с суммарно по истории; задержка Mobile App до 150 мс.
+    Точки измерения задержки и процентиль пока не определены.
+  contact:
+    name: Учебная команда А, Шулаев
+    url: 'https://github.com/tatianagrubich/operations-api-practice'
+servers:
+  - url: https://api.example.com/api/banking/v1
+    description: Общий адрес API. Хост задаётся при развёртывании.
+tags:
+  - name: BankingReadFacade
+    description: Получение счетов и истории операций.
+security:
+  - bearerAuth: []
+paths:
+  /accounts:
+    get:
+      tags: [BankingReadFacade]
+      operationId: listCurrentCustomerAccounts
+      summary: Получить счета авторизованного клиента
+      description: >-
+        Возвращает счета текущего клиента (ФЛ). Клиент определяется по бирер-токену на стороне бэкенда; clientId
+        в запросе не передаётся. Предназначен для Mobile App.      
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200': { $ref: '#/components/responses/AccountsResponse200' }
+        '400': { $ref: '#/components/responses/BadRequest400' }
+        '401': { $ref: '#/components/responses/Unauthorized401' }
+        '403': { $ref: '#/components/responses/Forbidden403' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity422' }
+        '429': { $ref: '#/components/responses/TooManyRequests429' }
+        '500': { $ref: '#/components/responses/InternalServerError500' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable503' }
+  '/accounts/{accountId}/operations':
+    get:
+      tags: [BankingReadFacade]
+      operationId: listAccountOperations
+      summary: Получить историю выбранного счёта для Mobile App
+      description: >-
+        Клиент выбирает счёт из GET /accounts и открывает его историю. Нет счёта или доступа к нему — 404 (чтобы не раскрывать существование счёта). 
+        Операции с blocked=true клиенту не возвращаются.
+      parameters:
+        - $ref: '#/components/parameters/accountIdPath'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/status'
+        - $ref: '#/components/parameters/startDate'
+        - $ref: '#/components/parameters/endDate'
+        - $ref: '#/components/parameters/categoryText'
+      responses:
+        '200': { $ref: '#/components/responses/OperationsResponse200' }
+        '400': { $ref: '#/components/responses/BadRequest400' }
+        '401': { $ref: '#/components/responses/Unauthorized401' }
+        '403': { $ref: '#/components/responses/Forbidden403' }
+        '404': { $ref: '#/components/responses/NotFound404' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity422' }
+        '429': { $ref: '#/components/responses/TooManyRequests429' }
+        '500': { $ref: '#/components/responses/InternalServerError500' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable503' }
+  /operations:
+    get:
+      tags: [BankingReadFacade]
+      operationId: searchOperations
+      summary: Найти операции для CRM
+      description: >-
+        Поиск для сотрудников CRM в пределах их полномочий, включая операции с blocked=true.
+        accountId — необязательный фильтр. Нет доступных совпадений — пустой список. Вызов из Mobile
+        App — 403.
+      parameters:
+        - $ref: '#/components/parameters/accountIdQuery'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/status'
+        - $ref: '#/components/parameters/startDate'
+        - $ref: '#/components/parameters/endDate'
+      responses:
+        '200': { $ref: '#/components/responses/OperationsResponse200' }
+        '400': { $ref: '#/components/responses/BadRequest400' }
+        '401': { $ref: '#/components/responses/Unauthorized401' }
+        '403': { $ref: '#/components/responses/Forbidden403' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity422' }
+        '429': { $ref: '#/components/responses/TooManyRequests429' }
+        '500': { $ref: '#/components/responses/InternalServerError500' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable503' }
+  '/operations/{operationId}':
+    get:
+      tags: [BankingReadFacade]
+      operationId: getOperation
+      summary: Получить детали операции для Mobile App или CRM
+      description: >-
+        Детали для Mobile App и CRM. operationId уникален, поэтому accountId в пути не нужен. Сервер
+        проверяет доступ к операции. Нет операции или доступа — 404. При blocked=true клиент
+        получает 404, уполномоченный сотрудник CRM — детали.
+      parameters:
+        - $ref: '#/components/parameters/operationIdPath'
+      responses:
+        '200': { $ref: '#/components/responses/OperationResponse200' }
+        '400': { $ref: '#/components/responses/BadRequest400' }
+        '401': { $ref: '#/components/responses/Unauthorized401' }
+        '403': { $ref: '#/components/responses/Forbidden403' }
+        '404': { $ref: '#/components/responses/NotFound404' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity422' }
+        '429': { $ref: '#/components/responses/TooManyRequests429' }
+        '500': { $ref: '#/components/responses/InternalServerError500' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable503' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Токен выдаёт внешняя система авторизации. Сервер проверяет его подлинность, срок действия,
+        назначение и права.
+  parameters:
+    accountIdPath:
+      name: accountId
+      in: path
+      required: true
+      description: Идентификатор выбранного счёта.
+      schema:
+        $ref: '#/components/schemas/AccountId'
+    operationIdPath:
+      name: operationId
+      in: path
+      required: true
+      description: Идентификатор операции.
+      schema:
+        $ref: '#/components/schemas/OperationId'
+    accountIdQuery:
+      name: accountId
+      in: query
+      required: false
+      description: Фильтр по счёту. Без него — поиск по всем счетам в пределах прав сотрудника CRM.
+      schema:
+        $ref: '#/components/schemas/AccountId'
+    offset:
+      name: offset
+      in: query
+      required: false
+      description: 'Смещение. Сколько записей пропустить с начала списка'
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 2147483647
+        default: 0
+      example: 0
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: 'Сколько записей вернуть: по умолчанию 20, максимум 100.'
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+    status:
+      name: status
+      in: query
+      required: false
+      description: Один статус. Без фильтра — HOLD и SETTLED.
+      schema:
+        $ref: '#/components/schemas/OperationStatus'
+      example: HOLD
+    startDate:
+      name: startDate
+      in: query
+      required: false
+      description: >-
+        Начальная дата UTC включительно, с 00:00:00Z. Фильтр по operationDateTime. Без параметра
+        нижней границы нет.
+      schema:
+        type: string
+        description: Начальная дата.
+        minLength: 10
+        maxLength: 10
+        format: date
+        pattern: '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+      example: '2026-11-01'
+    endDate:
+      name: endDate
+      in: query
+      required: false
+      description: >-
+        Конечная дата UTC включительно, до 00:00:00Z следующего дня. Без параметра верхней границы
+        нет. Если endDate раньше startDate — 422.
+      schema:
+        type: string
+        description: Конечная дата.
+        minLength: 10
+        maxLength: 10
+        format: date
+        pattern: '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+      example: '2026-11-30'
+    categoryText:
+      name: categoryText
+      in: query
+      required: false
+      description: Точное совпадение категории с учётом регистра. Пустое значение не допускается.
+      schema:
+        type: string
+        description: Название категории.
+        minLength: 1
+        maxLength: 255
+      example: Покупки
+  schemas:
+    AccountId:
+      type: string
+      description: 'Идентификатор счёта в Core Banking, не номер счёта.'
+      minLength: 1
+      maxLength: 255
+      example: acc-123
+    OperationId:
+      type: string
+      description: Уникальный идентификатор операции. Сохраняется при переходе HOLD → SETTLED.
+      minLength: 1
+      maxLength: 255
+      example: op-20261109-001
+    CurrencyCode:
+      type: string
+      description: Код валюты ISO 4217.
+      minLength: 3
+      maxLength: 3
+      pattern: '^[A-Z]{3}$'
+      example: RUB
+    OperationStatus:
+      type: string
+      description: >-
+        HOLD — сумма зарезервирована; SETTLED — движение денег окончательно учтено. Статус не связан
+        с ограничением показа blocked.
+      minLength: 1
+      maxLength: 7
+      enum: [HOLD, SETTLED]
+    OperationDateTime:
+      type: string
+      description: >-
+        Время исходной операции в UTC. Не время загрузки в кэш или смены статуса. RFC 3339, до
+        миллисекунд.
+      minLength: 20
+      maxLength: 24
+      format: date-time
+      pattern: >-
+        ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,3})?Z$
+      example: '2026-11-09T12:30:00Z'
+    AmountValue:
+      type: number
+      format: decimal
+      description: >-
+        Расход — отрицательная сумма, поступление — положительная. До 4 знаков после запятой. API не
+        округляет значения.
+      minimum: -999999999999.9999
+      maximum: 999999999999.9999
+      multipleOf: 0.0001
+      example: -10000
+    ConversionRate:
+      type: number
+      format: decimal
+      description: >-
+        Единиц валюты счёта за 1 единицу исходной валюты. Приходит из АБС, без отдельных комиссий.
+        До 8 знаков после запятой. Возвращается при разных валютах, если известен; API курс не
+        рассчитывает.
+      minimum: 1.e-8
+      maximum: 99999999.99999999
+      multipleOf: 1.e-8
+      example: 100
+    Money:
+      type: object
+      description: 'Сумма и валюта. Для HOLD — зарезервированная сумма, для SETTLED — окончательная.'
+      additionalProperties: false
+      required: [value, currency]
+      properties:
+        value:
+          $ref: '#/components/schemas/AmountValue'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+    Account:
+      type: object
+      description: Сведения о банковском счёте из Core Banking. Номер карты не используется.
+      additionalProperties: false
+      required: [accountId, currency, maskedNumber]
+      properties:
+        accountId:
+          $ref: '#/components/schemas/AccountId'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        maskedNumber:
+          type: string
+          description: '20 символов: первые 5 цифр, 11 звёздочек, последние 4 цифры.'
+          minLength: 20
+          maxLength: 20
+          pattern: '^[0-9]{5}\*{11}[0-9]{4}$'
+          example: 40817***********4321
+    Merchant:
+      type: object
+      description: Данные продавца из CRM. Отдельного метода для Merchant нет.
+      additionalProperties: false
+      properties:
+        brandName:
+          type: string
+          description: Название продавца.
+          minLength: 1
+          maxLength: 255
+          example: Example Store
+        terminalAddress:
+          type: string
+          description: Адрес терминала одной строкой.
+          minLength: 1
+          maxLength: 255
+          example: 'Германия, Берлин, Example Strasse 1'
+      minProperties: 1
+    Category:
+      type: object
+      description: 'Категория трат из CRM, полученная через Data Grid.'
+      additionalProperties: false
+      required: [text]
+      properties:
+        text:
+          type: string
+          description: Название категории.
+          minLength: 1
+          maxLength: 255
+          example: Покупки
+    ScoringDecision:
+      type: object
+      description: >-
+        Ограничение показа из Scoring. При подтверждённом отсутствии решения действуют обычные права
+        доступа, объект не возвращается. Если из-за ошибки чтения решения нельзя определить доступ —
+        503.
+      additionalProperties: false
+      required: [blocked]
+      properties:
+        blocked:
+          type: boolean
+          description: >-
+            true — скрыть от клиента; уполномоченному сотруднику CRM доступно. false — ограничения
+            показа нет.
+          example: false
+    OperationListItem:
+      type: object
+      description: Краткая операция для списков Mobile App и CRM. Сумма в валюте счёта.
+      additionalProperties: false
+      required: [operationId, status, operationDateTime, accountId, amountValue, amountCurrency]
+      properties:
+        operationId:
+          $ref: '#/components/schemas/OperationId'
+        status:
+          $ref: '#/components/schemas/OperationStatus'
+        operationDateTime:
+          $ref: '#/components/schemas/OperationDateTime'
+        accountId:
+          $ref: '#/components/schemas/AccountId'
+        merchantName:
+          type: string
+          description: 'Название продавца, если известно.'
+          minLength: 1
+          maxLength: 255
+          example: Example Store
+        categoryText:
+          type: string
+          description: 'Категория трат, если известна.'
+          minLength: 1
+          maxLength: 255
+          example: Покупки
+        amountValue:
+          $ref: '#/components/schemas/AmountValue'
+        amountCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+    OperationDetail:
+      type: object
+      description: |-
+        transactionAmount — сумма в исходной валюте; accountAmount — сумма, учтённая на счёте.
+        accountAmount.currency совпадает с account.currency. Знаки обеих сумм совпадают.
+        Обе суммы приходят из АБС. API не пересчитывает их по курсу и не добавляет комиссии.
+        Равенство сумм при одной валюте не гарантируется: состав начислений определяет АБС.
+        При одинаковых валютах conversionRate отсутствует.
+      additionalProperties: false
+      required: [operationId, status, operationDateTime, account, transactionAmount, accountAmount]
+      properties:
+        operationId:
+          $ref: '#/components/schemas/OperationId'
+        status:
+          $ref: '#/components/schemas/OperationStatus'
+        operationDateTime:
+          $ref: '#/components/schemas/OperationDateTime'
+        account:
+          $ref: '#/components/schemas/Account'
+        transactionAmount:
+          $ref: '#/components/schemas/Money'
+        accountAmount:
+          $ref: '#/components/schemas/Money'
+        conversionRate:
+          $ref: '#/components/schemas/ConversionRate'
+        merchant:
+          $ref: '#/components/schemas/Merchant'
+        category:
+          $ref: '#/components/schemas/Category'
+        scoringDecision:
+          $ref: '#/components/schemas/ScoringDecision'
+    Error:
+      type: object
+      description: Причина ошибки. Без полных номеров счетов и внутренних технических данных.
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Машинный код ошибки.
+          minLength: 1
+          maxLength: 64
+          pattern: '^[A-Z][A-Z0-9_]*$'
+          example: INVALID_PARAMETER
+        message:
+          type: string
+          description: Описание ошибки.
+          minLength: 1
+          maxLength: 255
+          example: Параметр limit должен быть от 1 до 100.
+        field:
+          type: string
+          description: 'Имя ошибочного параметра, если применимо.'
+          minLength: 1
+          maxLength: 255
+          example: limit
+    ErrorResponse:
+      type: object
+      description: Ответ об ошибке.
+      additionalProperties: false
+      required: [requestId, errors]
+      properties:
+        requestId:
+          type: string
+          description: Идентификатор запроса для поддержки.
+          minLength: 36
+          maxLength: 36
+          format: uuid
+          example: 59b600fb-655a-4e88-b0de-ac9a0f5780f4
+        errors:
+          type: array
+          description: Причины ошибки.
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Error'
+    AccountsPage:
+      type: object
+      description: >-
+        Счета клиента по возрастанию accountId.
+        Если счетов нет — items: [], hasMore: false.
+      additionalProperties: false
+      required: [items, offset, limit, hasMore]
+      properties:
+        items:
+          type: array
+          description: 'Записи страницы, не более limit.'
+          minItems: 0
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Account'
+        offset:
+          type: integer
+          format: int32
+          description: Применённое смещение.
+          minimum: 0
+          maximum: 2147483647
+        limit:
+          type: integer
+          format: int32
+          description: Применённый размер страницы.
+          minimum: 1
+          maximum: 100
+        hasMore:
+          type: boolean
+          description: 'Есть следующая страница. Следующее смещение: offset + limit.'
+    OperationsPage:
+      type: object
+      description: |-
+        Права доступа, ограничения показа и фильтры применяются до offset/limit. Фильтры объединяются через И.
+        Сортировка: operationDateTime по убыванию, затем operationId по убыванию (лексикографически).
+        Нет совпадений — items: [], hasMore: false. Общее количество не вычисляется.
+        При новых операциях и смене статусов между запросами возможны повторы или пропуски: снимок не фиксируется.
+      additionalProperties: false
+      required: [items, offset, limit, hasMore]
+      properties:
+        items:
+          type: array
+          description: 'Записи страницы, не более limit.'
+          minItems: 0
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/OperationListItem'
+        offset:
+          type: integer
+          format: int32
+          description: Применённое смещение.
+          minimum: 0
+          maximum: 2147483647
+        limit:
+          type: integer
+          format: int32
+          description: Применённый размер страницы.
+          minimum: 1
+          maximum: 100
+        hasMore:
+          type: boolean
+          description: 'Есть следующая страница. Следующее смещение: offset + limit.'
+  headers:
+    CacheControl:
+      description: HTTP-кэширование ответа запрещено. Внутренний Data Grid используется независимо.
+      schema:
+        type: string
+        description: Политика HTTP-кэширования.
+        minLength: 1
+        maxLength: 8
+        enum:
+          - no-store
+    RetryAfter:
+      description: Число секунд до повторного запроса.
+      schema:
+        type: integer
+        format: int32
+        description: Задержка повтора в секундах.
+        minimum: 1
+        maximum: 86400
+      example: 5
+    WwwAuthenticate:
+      description: Требуемая схема авторизации.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
+      example: Bearer
+  responses:
+    BadRequest400:
+      description: 'Неверный формат, тип или диапазон параметра.'
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            requestId: 59b600fb-655a-4e88-b0de-ac9a0f5780f4
+            errors:
+              - code: INVALID_PARAMETER
+                message: Проверьте формат и допустимые значения параметров.
+    Unauthorized401:
+      description: 'Токен отсутствует, недействителен или истёк.'
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+        WWW-Authenticate:
+          $ref: '#/components/headers/WwwAuthenticate'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden403:
+      description: пользователь авторизован, но ему запрещено вызывать этот метод. Например метод CRM с токеном физика
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound404:
+      description: >-
+        Объект не найден или недоступен пользователю.
+        Например, GET /accounts/acc-123/operations возвращает 404,
+        если счёт acc-123 не существует или у пользователя нет доступа к нему.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity422:
+      description: 'Противоречивые параметры: например, startDate позже endDate.'
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict409:
+      description: Конфликт состояния. Включён в стандартный набор ответов; текущие GET его не используют.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TooManyRequests429:
+      description: Превышена частота запросов. Задержка повтора — в Retry-After.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError500:
+      description: Внутренняя ошибка сервера или некорректные данные источника.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ServiceUnavailable503:
+      description: сервис временно не может выполнить запрос
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    AccountsResponse200:
+      description: Список счетов.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AccountsPage'
+    OperationsResponse200:
+      description: Список операций.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OperationsPage'
+          example:
+            items:
+              - operationId: op-20261109-001
+                status: HOLD
+                operationDateTime: '2026-11-09T12:30:00Z'
+                accountId: acc-123
+                merchantName: Example Store
+                categoryText: Покупки
+                amountValue: -10000
+                amountCurrency: RUB
+            offset: 0
+            limit: 20
+            hasMore: false
+    OperationResponse200:
+      description: Детали операции.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OperationDetail'
+          example:
+            operationId: op-20261109-001
+            status: HOLD
+            operationDateTime: '2026-11-09T12:30:00Z'
+            account:
+              accountId: acc-123
+              currency: RUB
+              maskedNumber: 40817***********4321
+            transactionAmount:
+              value: -100
+              currency: EUR
+            accountAmount:
+              value: -10000
+              currency: RUB
+            conversionRate: 100
+            merchant:
+              brandName: Example Store
+              terminalAddress: 'Германия, Берлин, Example Strasse 1'
+            category:
+              text: Покупки
+            scoringDecision:
+              blocked: false
