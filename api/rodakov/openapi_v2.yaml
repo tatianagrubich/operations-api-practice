@@ -1,0 +1,707 @@
+openapi: 3.0.0
+info:
+  title: 'operations-api-practice'
+  version: 1.0.0
+  description: API Фронт.История операций
+  contact:
+    name: Родаков Олег Ростиславович
+    email: orodakov@vtb.ru
+    url: 'https://sfera.inno.local/knowledge/pages?id=2042404'
+servers:
+  - url: 'https://localhost:8080/operations-api-practice/v2'
+    description: LOCAL
+
+tags:
+  - name: Accounts
+    description: Счета клиента
+  - name: Operations
+    description: Операции клиента
+
+security:
+  - BearerAuth: []
+      
+paths:
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: Получить список счетов клиента
+      description: Метод вызывается фронтом для получения списка счетов клиента
+      operationId: getAccountList
+      parameters:
+        - $ref: '#/components/parameters/ClientIdHeader'            
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountListDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'          
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'          
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+           $ref: '#/components/responses/ServiceUnavailable'
+  /operations:
+    get:
+      tags:
+        - Operations
+      summary: Операции по счёту клиента
+      description: Метод вызывается фронтом для получения операций по счету
+      operationId: getOperationsByAccountId
+      parameters:
+        - name: accounId
+          in: query
+          description: Идентификатор счета
+          required: true
+          schema:
+            type: string       
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"   
+        - $ref: '#/components/parameters/LimitParam' 
+        - $ref: '#/components/parameters/OffsetParam'            
+        - name: startDate
+          in: query
+          description: Начальная дата операции
+          required: false
+          schema:
+            type: string 
+            format: DateTime
+            pattern: '^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):([0-5][0-9]))?$'
+            example: "2026-11-16T17:30:00Z"            
+        - name: endDate
+          in: query
+          description: Конечная дата операции
+          required: false
+          schema:
+            type: string 
+            format: DateTime
+            pattern: '^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):([0-5][0-9]))?$'
+            example: "2026-11-16T17:30:00Z"            
+        - name: status
+          in: query
+          description: Статус операции
+          required: false
+          schema:
+            $ref: '#/components/schemas/StatusEnumDTO'
+        - name: categoryText
+          in: query
+          description: Категория
+          required: false
+          schema:
+            $ref: '#/components/schemas/CategoryEnumDTO'           
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationListDTO'      
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'             
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'          
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+           $ref: '#/components/responses/ServiceUnavailable'
+  /operations/{operationId}:
+    get:
+      tags:
+        - Operations
+      summary: Операция
+      description: Метод вызывается фронтом для получения операции
+      operationId: getOperationsByFilter
+      parameters:
+        - name: operationId
+          in: path
+          description: Идентификатор операции
+          required: true
+          schema:
+            type: string         
+        - $ref: '#/components/parameters/LimitParam' 
+        - $ref: '#/components/parameters/OffsetParam'   
+        - name: startDate
+          in: query
+          description: Начальная дата операции
+          required: false
+          schema:
+            type: string 
+            format: DateTime
+            pattern: '^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):([0-5][0-9]))?$'
+            example: "2026-11-16T17:30:00Z"
+        - name: endDate
+          in: query
+          description: Конечная дата операции
+          required: false
+          schema:
+            type: string 
+            format: DateTime
+            pattern: '^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):([0-5][0-9]))?$'
+            example: "2026-11-16T17:30:00Z"
+        - name: status
+          in: query
+          description: Статус операции
+          required: false
+          schema:
+            $ref: '#/components/schemas/StatusEnumDTO'
+        - name: categoryText
+          in: query
+          description: Категория
+          required: false
+          schema:
+            $ref: '#/components/schemas/CategoryEnumDTO'          
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationListDTO'      
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'             
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'          
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+           $ref: '#/components/responses/ServiceUnavailable'
+  /operations/{operationId}/detail:
+    get:
+      tags:
+        - Operations
+      summary: Операция детально
+      description: Метод вызывается фронтом для получения деталей операци
+      operationId: getOperationsByOperationId
+      parameters:
+        - name: operationId
+          in: path
+          description: Идентификатор операции
+          required: true
+          schema:
+            type: string   
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationDetailDTO'      
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'             
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'          
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+           $ref: '#/components/responses/ServiceUnavailable' 
+  /operations/{operationId}/apply-decision:
+    post:
+      tags:
+        - Operations
+      summary: Корректировка решения по операции
+      description: Метод вызывается фронтом для корректировки решения по операции
+      operationId: postOperationApplyDecision
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'  
+        - name: operationId
+          in: path
+          description: Идентификатор операции
+          required: true
+          schema:
+            type: string   
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoringDecisionRequest'            
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessOk' 
+        '201':
+          $ref: '#/components/responses/Created'                
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'             
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'          
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+           $ref: '#/components/responses/ServiceUnavailable'            
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 
+  parameters:
+    ClientIdHeader:
+      name: X-Client-ID        
+      in: header                
+      required: true            
+      description: Уникальный идентификатор клиента
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440777" 
+    IdempotencyKeyHeader:
+      name: Idempotency-Key        
+      in: header                
+      required: true            
+      description: Ключ идкмпотентности
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440777"         
+    LimitParam:
+      name: limit
+      in: query
+      description: Максимальное количество элементов в ответе
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    OffsetParam:
+      name: offset
+      in: query
+      description: Количество элементов, которое нужно пропустить
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  schemas:  
+    AmountResponseDTO:
+      type: object
+      title: AmountResponseDTO
+      description: Информация о сумме платежа
+      required:
+        - currency
+        - value
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyEnumDTO'
+        value:
+          type: number
+          format: double
+          minimum: -999999999999.9999
+          maximum: 999999999999.9999     
+          multipleOf: 0.0001          
+          description: Сумма платежа
+    AmountArrayResponseDTO:
+      type: object
+      title: AmountArrayResponseDTO
+      description: Мультивалютная информация о сумме платежа
+      required:
+        - currency
+        - value
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyEnumDTO'
+        value:
+          type: number
+          format: double
+          minimum: -999999999999.9999
+          maximum: 999999999999.9999     
+          multipleOf: 0.0001          
+          description: Сумма платежа   
+        currencyRate:
+          type: number
+          format: double
+          minimum: -999999999999.9999
+          maximum: 999999999999.9999     
+          multipleOf: 0.0001          
+          description: Курс конвертации
+        currencyUsedBonus:
+          type: number
+          minimum: -999999999999.9999
+          maximum: 999999999999.9999     
+          multipleOf: 0.0001 
+          example: 1.01
+          description: Бонусный % за использование акционной валюты
+    AccountListDTO:
+      type: object
+      title: AccountListDTO
+      description: Список счетов
+      required:
+        - accounts 
+        - pagination
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountResponseDTO'
+        pagination:
+          $ref: '#/components/schemas/PaginationResponseDTO'            
+    AccountResponseDTO:
+      type: object
+      title: AccountResponseDTO
+      description: Счет
+      required:
+        - accountid
+        - accountNumber
+      properties:
+        accountid:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"             
+          description: Идентификатор счета 
+        accountNumber:
+          type: string
+          description: Номер счета маскированный
+          pattern: '^[0-9]{5}\*{11}[0-9]{4}$'
+          minLength: 20
+          maxLength: 20          
+          example: "40747***********4534" 
+    OperationListDTO:
+      type: object
+      title: OperationListDTO
+      description: Список операций
+      required:
+        - operations
+        - pagination        
+      properties:
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationResponseDTO'
+        pagination:
+          $ref: '#/components/schemas/PaginationResponseDTO'
+    OperationResponseDTO:
+      type: object
+      title: OperationResponseDTO
+      description: Операция
+      required:
+        - operationid
+        - status
+        - currency
+        - isActive
+      properties:
+        operationid:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440111"             
+          description: Идентификатор операции
+        status:
+          $ref: '#/components/schemas/StatusEnumDTO'
+        operationDateTime:
+          type: string
+          format: DateTime
+          pattern: '^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):([0-5][0-9]))?$'
+          maxLength: 20
+          example: "2026-11-16T17:30:00Z"          
+          description: Дата и время совершения операции
+        accountid:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"             
+          description: Идентификатор счёта  
+        merchantName:
+          type: string
+          maxLength: 255
+          example: "ООО Рога и копыта"             
+          description: намиенование продавца    
+        categoryText:
+          $ref: '#/components/schemas/CategoryEnumDTO'    
+        amountValue:
+          type: number
+          format: double
+          minimum: -999999999999.9999
+          maximum: 999999999999.9999     
+          multipleOf: 0.0001
+          example: 121.42            
+          description: сумма операции     
+        amountCurrency:
+          $ref: '#/components/schemas/CurrencyEnumDTO'
+    StatusEnumDTO:
+      type: string
+      description:  |
+        Статус операции:
+        * `HOLD` - Заморозка
+        * `SETTLED` - Финальное списание
+      maxLength: 7  
+      example: "SETTLED"
+      enum: 
+        - HOLD
+        - SETTLED
+    CurrencyEnumDTO:
+      type: string
+      description:  Валюта операции
+      maxLength: 3 
+      example: "RUB"
+      enum: 
+        - RUB
+        - USD
+    CategoryEnumDTO:
+      type: string
+      description:  Категории трат
+      maxLength: 20       
+      example: "Транспорт"
+      enum: 
+        - Транспорт
+        - ЖКХ
+        - Здоровье
+        - Отдых и резвлечения
+        - Переводы
+        - Прочее
+    PaginationResponseDTO:
+      type: object
+      title: PaginationResponseDTO
+      description: Информация о пагинации
+      required:
+        - page
+        - limit
+        - total
+      properties:
+        page:
+          type: integer
+          description: Текущая страница
+          minimum: 0
+          maximum: 1000000          
+          example: 2
+        limit:
+          description: Размер выборки
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          description: Общее количество записей
+          type: integer
+          minimum: 0
+          maximum: 1000000            
+    OperationDetailDTO:
+      type: object
+      title: OperationDetailDTO
+      description: Детали операции
+      required:
+        - operationid
+        - status
+        - account
+        - amount
+      properties:
+        operationid:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440111"             
+          description: Идентификатор операции
+        status:
+          $ref: '#/components/schemas/StatusEnumDTO'
+        operationDateTime:
+          type: string
+          format: DateTime
+          description: Дата и время совершения операции
+          pattern: '^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):([0-5][0-9]))?$'
+          maxLength: 20
+          example: "2026-11-16T17:30:00Z" 
+        account:
+          $ref: '#/components/schemas/AccountResponseDTO'
+        amount:
+          $ref: '#/components/schemas/AmountResponseDTO'          
+        amountList:
+          type: array
+          items:        
+            $ref: '#/components/schemas/AmountArrayResponseDTO'
+        currencyRate:
+          type: object
+          required:
+            - currency
+            - rate
+          properties:
+            currency:
+              $ref: '#/components/schemas/CurrencyEnumDTO'
+            rate:
+              type: number
+              format: double
+              multipleOf: 0.0001
+              minimum: 0.0001
+              maximum: 999999999999.9999
+              description: Курс валюты с точностью до 4 знаков после запятой
+              example: 92.4512
+        category:
+          $ref: '#/components/schemas/CategoryEnumDTO'            
+        merchant:
+          $ref: '#/components/schemas/MerchantResponseDTO'  
+        scoringDecision:
+          type: object
+          title: scoringDecision
+          description: Решение по скорингу
+          required:
+            - blocked
+          properties:
+            blocked:
+              type: boolean
+              description: "Признак блокировки операции, true - блокирована"
+    MerchantResponseDTO:
+      type: object
+      title: MerchantResponseDTO
+      description: Информация о продавце
+      properties:
+        merchantBrandName:
+          type: string
+          description: наименование продавца 
+          maxLength: 255
+          example: "ООО Рога и копыта" 
+        merchantAddress:
+          type: string
+          description: Адрес продавца 
+          maxLength: 255
+          example: "г. Псков, ул. Красных просвещенцев, д. 13"  
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          maxLength: 50
+        title:
+          type: string
+          maxLength: 255
+        details:
+          type: array
+          items:
+            type: string  
+    ScoringDecisionRequest:
+      type: object
+      required:
+        - decision
+        - reasonCode
+      properties:
+        blocked:
+          type: boolean
+          description: Итоговое скоринговое решение по блокировке операции
+          example: false
+        reasonCode:
+          type: string
+          maxLength: 128
+          description: Код причины принятого решения
+          example: "SCORE_THRESHOLD_PASSED"
+        comment:
+          type: string
+          description: Дополнительный комментарий андеррайтера или системы
+          maxLength: 255
+          example: "Ручное одобрение по скоринговой модели v2.4"            
+  responses:
+    SuccessOk:
+      description: Повтор после успеха
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Created:
+      description: Первый успешный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'            
+    BadRequest:
+      description: Некорректный запрос (ошибка валидации параметров)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Требуется аутентификация (отсутствует или недействителен токен)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Доступ запрещен (недостаточно прав)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Конфликт при обработке запроса (например, дубликат ресурса или нарушение состояния)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'  
+    UnprocessableEntity:
+      description: Ошибка валидации бизнес-правил или семантики запроса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'              
+    TooManyRequests:
+      description: Превышен лимит запросов (Rate Limit)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'              
+    InternalServerError:
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: Сервис недоступен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'  

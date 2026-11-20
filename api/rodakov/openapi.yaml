@@ -521,25 +521,7 @@ components:
         account:
           $ref: '#/components/schemas/AccountResponseDTO'
         amount:
-          type: array
-          items:        
-            $ref: '#/components/schemas/AmountResponseDTO'
-        currencyRate:
-          type: object
-          required:
-            - currency
-            - rate
-          properties:
-            currency:
-              $ref: '#/components/schemas/CurrencyEnumDTO'
-            rate:
-              type: number
-              format: double
-              multipleOf: 0.0001
-              minimum: 0.0001
-              maximum: 999999999999.9999
-              description: Курс валюты с точностью до 4 знаков после запятой
-              example: 92.4512
+          $ref: '#/components/schemas/AmountResponseDTO'          
         category:
           $ref: '#/components/schemas/CategoryEnumDTO'            
         merchant:
