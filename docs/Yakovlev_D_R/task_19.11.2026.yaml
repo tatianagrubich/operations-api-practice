@@ -1,0 +1,722 @@
+openapi: 3.0.3
+
+info:
+  title: OperationsHistoryApi
+  version: 2.0.0
+  description: |
+    Контракт ленты операций и проводок версии v2.
+    Операции представлены самостоятельными денежными составляющими (splits) с разными суммами и валютами.
+    Вместо агрегированного поля amount у операции передаются splits и accountCurrency.
+    Показатель amount версии v1 определяется как общий денежный объём, а не чистое изменение баланса:
+    после пересчёта в accountCurrency суммируются абсолютные величины сплитов без взаимозачёта направлений.
+    Коэффициент exchangeRate означает количество accountCurrency за одну единицу валюты сплита.
+    Используется сохранённый курс АБС, зафиксированный при отражении составляющей; для совпадающих валют курс 1.
+    Итог суммируется десятичной арифметикой без промежуточного округления; результат округляется
+    до минимальной единицы accountCurrency по ISO 4217 правилом HALF_UP.
+    Если необходимый курс отсутствует, агрегированное значение не подменяется нулём: возвращается
+    ошибка 503 с существующей структурой ErrorResponse.
+    Бизнес-допущение: сплиты — экономически самостоятельные части операции, а не две стороны одной проводки.
+    Старая версия /v1 продолжает обслуживаться отдельно в течение 9 месяцев переходного периода.
+  contact:
+    name: YakovlevDR
+    email: yakovlevdr@example.com
+    url: https://yakovlevdr.example.com
+
+servers:
+- url: /api/operations-history/v2
+  description: Адрес API версии v2
+
+tags:
+- name: OperationsHistory
+  description: История операций
+
+paths:
+  /operations/{operationId}:
+    get:
+      tags: [OperationsHistory]
+      operationId: getOperationByIdV2
+      summary: Получить операцию (v2, сплиты)
+      description: |
+        Возвращает операцию со ссылкой scoringRef при наличии решения и опциональным блоком posting.
+        Денежный объём представлен массивом splits; агрегированное поле amount отсутствует. Валюта сводной
+        суммы задаётся accountCurrency.
+      parameters:
+      - $ref: '#/components/parameters/operationId'
+      responses:
+        '200':
+          description: Операция найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationDetailV2'
+        '400': {$ref: '#/components/responses/BadRequest400'}
+        '404': {$ref: '#/components/responses/NotFound404'}
+        '422': {$ref: '#/components/responses/UnprocessableEntity422'}
+        '429': {$ref: '#/components/responses/TooManyRequests429'}
+        '500': {$ref: '#/components/responses/InternalServerError500'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable503'}
+  /operations/search:
+    post:
+      tags: [OperationsHistory]
+      operationId: searchOperationsV2
+      summary: Найти операции по сложному фильтру (v2, сплиты)
+      description: |-
+        Поиск по прежнему фильтру; POST не изменяет операции. Ответ содержит сплиты каждой операции и валюту счёта. 
+        Результаты выдаются страницами; при отсутствии записей data — пустой массив.
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - name: Idempotency-Key
+        in: header
+        required: true
+        description: Ключ идемпотентности в формате UUID
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationSearchRequest'
+      responses:
+        '200':
+          description: Страница результатов поиска
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsResponseV2'
+        '400': {$ref: '#/components/responses/BadRequest400'}
+        '422': {$ref: '#/components/responses/UnprocessableEntity422'}
+        '429': {$ref: '#/components/responses/TooManyRequests429'}
+        '500': {$ref: '#/components/responses/InternalServerError500'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable503'}
+  /operations:
+    get:
+      tags: [OperationsHistory]
+      operationId: getOperationsByIdsV2
+      summary: Получить операции по известным идентификаторам (v2, сплиты)
+      description: |
+        Параметр ids передаётся как список через запятую, например ids=op1,op2,op3. Неизвестные
+        идентификаторы не входят в data. Денежный объём представлен массивом splits; агрегированное поле
+        amount отсутствует. Валюта сводной суммы задаётся accountCurrency.
+      parameters:
+      - $ref: '#/components/parameters/operationIds'
+      responses:
+        '200':
+          description: Найденные операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsByIdsResponseV2'
+        '400': {$ref: '#/components/responses/BadRequest400'}
+        '422': {$ref: '#/components/responses/UnprocessableEntity422'}
+        '429': {$ref: '#/components/responses/TooManyRequests429'}
+        '500': {$ref: '#/components/responses/InternalServerError500'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable503'}
+  /operations/{operationId}/scoring-decision:
+    get:
+      tags: [OperationsHistory]
+      operationId: getOperationScoringDecisionV2
+      summary: Получить скоринговое решение по операции
+      description: |
+        Сервис находит scoringRef у операции и запрашивает решение через API
+        Scoring. Если ссылки или самого решения нет, возвращает 404. Поле
+        riskSigns не передаётся в публичный ответ.
+      parameters:
+      - $ref: '#/components/parameters/operationId'
+      responses:
+        '200':
+          description: Скоринговое решение получено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoringDecisionDto'
+        '400': {$ref: '#/components/responses/BadRequest400'}
+        '404': {$ref: '#/components/responses/NotFound404'}
+        '422': {$ref: '#/components/responses/UnprocessableEntity422'}
+        '429': {$ref: '#/components/responses/TooManyRequests429'}
+        '500': {$ref: '#/components/responses/InternalServerError500'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable503'}
+  /accounts/{accountId}/operations:
+    get:
+      tags: [OperationsHistory]
+      operationId: getAccountOperationsV2
+      summary: Получить операции по счёту (v2, сплиты)
+      description: |
+        Возвращает ограниченную страницу операций счёта. Денежный объём представлен массивом splits;
+        агрегированное поле amount отсутствует. Валюта сводной суммы задаётся accountCurrency.
+      parameters:
+      - $ref: '#/components/parameters/accountId'
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      responses:
+        '200':
+          description: Страница операций счёта
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsResponseV2'
+        '400': {$ref: '#/components/responses/BadRequest400'}
+        '404': {$ref: '#/components/responses/NotFound404'}
+        '422': {$ref: '#/components/responses/UnprocessableEntity422'}
+        '429': {$ref: '#/components/responses/TooManyRequests429'}
+        '500': {$ref: '#/components/responses/InternalServerError500'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable503'}
+  /postings:
+    get:
+      tags: [OperationsHistory]
+      operationId: getPostingsV2
+      summary: Получить страницу проводок
+      description: |
+        Публичный ответ не содержит postingRef, accountId и riskSigns. При отсутствии проводок data — пустой
+        массив
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      responses:
+        '200':
+          description: Страница проводок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostingsResponseDto'
+        '400': {$ref: '#/components/responses/BadRequest400'}
+        '422': {$ref: '#/components/responses/UnprocessableEntity422'}
+        '429': {$ref: '#/components/responses/TooManyRequests429'}
+        '500': {$ref: '#/components/responses/InternalServerError500'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable503'}
+  /postings/stream:
+    get:
+      tags: [OperationsHistory]
+      operationId: getPostingsStreamV2
+      summary: Получить события проводок для антифрода
+      description: |
+        eventId — последнее обработанное потребителем событие. Следующий ответ
+        начинается строго после него; значение 0 означает начало доступного
+        потока. При пустом ответе nextEventId повторяет входной eventId.
+      parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/limit'
+      servers:
+      - url: /system/v2
+      responses:
+        '200':
+          description: Порция событий проводок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostingsStreamResponse'
+        '400': {$ref: '#/components/responses/BadRequest400'}
+        '422': {$ref: '#/components/responses/UnprocessableEntity422'}
+        '429': {$ref: '#/components/responses/TooManyRequests429'}
+        '500': {$ref: '#/components/responses/InternalServerError500'}
+        '503': {$ref: '#/components/responses/ServiceUnavailable503'}
+
+components:
+  parameters:
+    operationId:
+      name: operationId
+      in: path
+      required: true
+      description: Идентификатор операции.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      description: Внутренний идентификатор счёта.
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        maximum: 9223372036854775807
+    operationIds:
+      name: ids
+      in: query
+      required: true
+      description: Список идентификаторов операций через запятую.
+      style: form
+      explode: false
+      schema:
+        type: array
+        minItems: 1
+        maxItems: 100
+        items:
+          type: string
+          minLength: 1
+          maxLength: 64
+    page:
+      name: page
+      in: query
+      required: false
+      description: Номер страницы, начинается с 1.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 1000000
+        default: 1
+    pageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: Размер страницы, не более 100.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 100
+    eventId:
+      name: eventId
+      in: query
+      required: true
+      description: Курсор последнего обработанного события; 0 — начало доступного потока.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: Максимум событий в ответе.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 100
+
+  schemas:
+    OperationStatus:
+      type: string
+      description: Состояние операции;
+      maxLength: 9
+      enum: [DRAFT, READY, DECLINED, EXECUTION, CANCELLED, EXECUTED, REJECTED]
+    PostingStatus:
+      type: string
+      description: Состояние проводки.
+      maxLength: 7
+      enum: [HOLD, SETTLED]
+    OperationSearchRequest:
+      type: object
+      additionalProperties: false
+      description: Фильтр поиска операций; пустой объект означает поиск без фильтров.
+      properties:
+        accountIds:
+          type: array
+          description: Внутренние идентификаторы счетов.
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854775807
+        dateFrom:
+          type: string
+          format: date
+          description: Начальная дата включительно.
+          pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+          maxLength: 10
+        dateTo:
+          type: string
+          format: date
+          description: Конечная дата включительно; должна быть не раньше dateFrom.
+          pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+          maxLength: 10
+        status:
+          $ref: '#/components/schemas/OperationStatus'
+        seller:
+          type: string
+          description: Продавец.
+          maxLength: 255
+    Paging:
+      type: object
+      additionalProperties: false
+      required: [offset, limit, count, total]
+      properties:
+        offset:
+          type: integer
+          format: int64
+          description: Позиция первого элемента страницы, начиная с 1.
+          minimum: 1
+          maximum: 9223372036854775807
+        limit:
+          type: integer
+          format: int32
+          description: Запрошенный размер страницы.
+          minimum: 1
+          maximum: 100
+        count:
+          type: integer
+          format: int32
+          description: Число элементов на этой странице.
+          minimum: 0
+          maximum: 100
+        total:
+          type: integer
+          format: int64
+          description: Общее число найденных элементов.
+          minimum: 0
+          maximum: 9223372036854775807
+    PostingDto:
+      type: object
+      additionalProperties: false
+      description: Публичное представление проводки. postingRef исключён из тела ответа.
+      required: [conversationRate, status, account]
+      properties:
+        conversationRate:
+          type: array
+          description: Суммы конвертации
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/ConversionAmount'
+        status:
+          $ref: '#/components/schemas/PostingStatus'
+        account:
+          $ref: '#/components/schemas/AccountDto'
+        scoringDecision:
+          type: object
+          nullable: true
+          additionalProperties: false
+          description: Решение может отсутствовать; riskSigns не включаются в публичный ответ.
+          required: [blocked]
+          properties:
+            blocked:
+              type: boolean
+              description: Признак блокировки по решению Scoring.
+    ConversionAmount:
+      type: object
+      additionalProperties: false
+      required: [currency, amount]
+      properties:
+        currency:
+          type: string
+          description: Код валюты ISO 4217.
+          pattern: '^[A-Z]{3}$'
+          maxLength: 3
+        amount:
+          type: number
+          format: double
+          description: Сумма в указанной валюте.
+          minimum: 0
+          maximum: 1000000000000
+    AccountDto:
+      type: object
+      additionalProperties: false
+      required: [accountNumber]
+      properties:
+        accountNumber:
+          type: string
+          description: Маскированный номер счёта. accountId не раскрывается в этом DTO.
+          pattern: '^[0-9]{5}\*{11}[0-9]{4}$'
+          minLength: 20
+          maxLength: 20
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [errors]
+      properties:
+        errors:
+          type: array
+          description: Ошибки обработки запроса.
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/ApiError'
+    ApiError:
+      type: object
+      additionalProperties: false
+      required: [code, title]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Идентификатор экземпляра ошибки.
+        code:
+          type: string
+          description: Код ошибки из перечня контракта.
+          maxLength: 64
+          enum: [request.invalid, request.validationFailed, resource.notFound, request.conflict, 
+              rate.limitExceeded, service.internalError, service.unavailable]
+        title:
+          type: string
+          description: Краткое описание ошибки без технических деталей.
+          maxLength: 255
+        detail:
+          type: string
+          description: Дополнительное объяснение для клиента.
+          maxLength: 1000
+        source:
+          $ref: '#/components/schemas/ErrorSource'
+    ErrorSource:
+      type: object
+      additionalProperties: false
+      required: [pointer]
+      properties:
+        pointer:
+          type: string
+          description: JSON Pointer к полю с ошибкой.
+          maxLength: 255
+
+    OperationListItemV2:
+      type: object
+      additionalProperties: false
+      description: |
+        Краткая операция для списка. В v2 вместо агрегированного amount возвращаются splits и
+        accountCurrency. Общий денежный объём не хранится отдельным полем: его можно восстановить из сплитов
+        без учёта направления потоков. См. OperationSplitV2.
+      required:
+      - operationId
+      - status
+      - accountCurrency
+      - splits
+      - accountNumber
+      - createdAt
+      properties:
+        operationId:
+          type: string
+          description: Служебный ID для перехода к деталям; не выводится на экран.
+          minLength: 1
+          maxLength: 64
+        status:
+          $ref: '#/components/schemas/OperationStatus'
+        accountCurrency:
+          type: string
+          description: Код валюты счёта по ISO 4217; в ней рассчитывается legacy amount из v1.
+          pattern: ^[A-Z]{3}$
+          maxLength: 3
+        splits:
+          type: array
+          description: |
+            Самостоятельные денежные составляющие одной операции. Сплиты отражают экономические части
+            операции, а не встречные стороны одной бухгалтерской проводки. Итоговый объём (как amount в v1)
+            равен сумме amount * exchangeRate по всем сплитам с округлением итоговой суммы по правилам
+            accountCurrency.
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/OperationSplitV2'
+        accountNumber:
+          type: string
+          description: Маскированный номер счёта.
+          pattern: '^[0-9]{5}\*{11}[0-9]{4}$'
+          minLength: 20
+          maxLength: 20
+        createdAt:
+          type: string
+          format: date-time
+          description: Время создания операции по RFC 3339.
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
+        postingStatus:
+          $ref: '#/components/schemas/PostingStatus'
+    OperationDetailV2:
+      type: object
+      additionalProperties: false
+      description: |
+        Детальная операция. В v2 вместо агрегированного amount возвращаются splits и accountCurrency. Общий
+        денежный объём не хранится отдельным полем: его можно восстановить из сплитов без учёта направления
+        потоков. См. OperationSplitV2.
+      required:
+      - operationId
+      - status
+      - accountCurrency
+      - splits
+      - accountNumber
+      - createdAt
+      properties:
+        operationId:
+          type: string
+          description: Служебный ID операции, не показывается пользователю.
+          minLength: 1
+          maxLength: 64
+        status:
+          $ref: '#/components/schemas/OperationStatus'
+        accountCurrency:
+          type: string
+          description: Код валюты счёта по ISO 4217; в ней рассчитывается legacy amount из v1.
+          pattern: ^[A-Z]{3}$
+          maxLength: 3
+        splits:
+          type: array
+          description: |
+            Самостоятельные денежные составляющие одной операции. Сплиты отражают экономические части
+            операции, а не встречные стороны одной бухгалтерской проводки. Итоговый объём (как amount в v1)
+            равен сумме amount * exchangeRate по всем сплитам с округлением итоговой суммы по правилам
+            accountCurrency.
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/OperationSplitV2'
+        accountNumber:
+          type: string
+          description: Маскированный номер счёта.
+          pattern: '^[0-9]{5}\*{11}[0-9]{4}$'
+          minLength: 20
+          maxLength: 20
+        createdAt:
+          type: string
+          format: date-time
+          description: Время создания операции по RFC 3339.
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
+        seller:
+          type: string
+          description: Продавец, связанный с операцией.
+          maxLength: 255
+        scoringRef:
+          type: string
+          description: Ссылка на решение Scoring; отсутствует, если решения нет.
+          maxLength: 128
+        posting:
+          $ref: '#/components/schemas/PostingDto'
+    OperationSplitV2:
+      type: object
+      additionalProperties: false
+      description: |
+        Одна самостоятельная денежная составляющая операции. amount неотрицателен и не содержит знак
+        списания/зачисления. exchangeRate — зафиксированный в источнике (АБС) курс пересчёта из currency в
+        accountCurrency: 1 единица currency равна exchangeRate единицам accountCurrency. Для одинаковых
+        валют exchangeRate = 1. Используется курс, относящийся к моменту отражения составляющей в АБС;
+        текущий рыночный курс не применяется. Отсутствующий обязательный курс не заменяется 1 или 0.
+      required:
+      - amount
+      - currency
+      - exchangeRate
+      properties:
+        amount:
+          type: number
+          format: double
+          description: Абсолютная величина денежной составляющей в currency. Неотрицательная.
+          minimum: 0
+          maximum: 1000000000000
+        currency:
+          type: string
+          description: Код исходной валюты составляющей ISO 4217.
+          pattern: ^[A-Z]{3}$
+          maxLength: 3
+        exchangeRate:
+          type: number
+          format: double
+          description: 'Положительный коэффициент: сколько accountCurrency за 1 currency; при совпадении валют 1.'
+          minimum: 0
+          maximum: 1000000000000
+          exclusiveMinimum: true
+    OperationsResponseV2:
+      type: object
+      additionalProperties: false
+      description: 'Ответ v2: записи содержат splits и accountCurrency, но не содержат общего amount. Остальная
+        форма ответа соответствует v1.'
+      required: [data, paging]
+      properties:
+        data:
+          type: array
+          description: Операции страницы, пустой массив при отсутствии результатов.
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/OperationListItemV2'
+        paging:
+          $ref: '#/components/schemas/Paging'
+    OperationsByIdsResponseV2:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          description: Найденные операции в порядке запрошенных идентификаторов.
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/OperationDetailV2'
+      description: 'Ответ v2: записи содержат splits и accountCurrency, но не содержат общего amount. Остальная
+        форма ответа соответствует v1.'
+    ScoringDecisionDto:
+      type: object
+      additionalProperties: false
+      required: [blocked]
+      properties:
+        blocked:
+          type: boolean
+          description: Признак блокировки; riskSigns не включаются в публичный контракт.
+    PostingsResponseDto:
+      type: object
+      additionalProperties: false
+      description: DTO списка проводок; исходное nullable postings заменено на data и paging по 
+        стандарту.
+      required: [data, paging]
+      properties:
+        data:
+          type: array
+          description: Проводки страницы, пустой массив при отсутствии результатов.
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/PostingDto'
+        paging:
+          $ref: '#/components/schemas/Paging'
+    PostingsStreamResponse:
+      type: object
+      additionalProperties: false
+      required: [data, nextEventId]
+      properties:
+        data:
+          type: array
+          description: События строго после входного eventId.
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/PostingEvent'
+        nextEventId:
+          type: string
+          description: Курсор для следующего чтения.
+          minLength: 1
+          maxLength: 128
+    PostingEvent:
+      type: object
+      additionalProperties: false
+      required: [eventId, postingRef, status, occurredAt]
+      properties:
+        eventId:
+          type: string
+          description: Идентификатор события в потоке.
+          minLength: 1
+          maxLength: 128
+        postingRef:
+          type: string
+          description: Служебная ссылка на проводку для антифрода.
+          minLength: 1
+          maxLength: 128
+        status:
+          $ref: '#/components/schemas/PostingStatus'
+        occurredAt:
+          type: string
+          format: date-time
+          description: Время возникновения события по RFC 3339.
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
+  responses:
+    BadRequest400:
+      description: Некорректный запрос или бизнес-ошибка; код request.invalid.
+      content: &errorContent
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity422:
+      description: Запрос не прошёл проверку контракта; код request.validationFailed.
+      content: *errorContent
+    NotFound404:
+      description: Ресурс не найден; код resource.notFound.
+      content: *errorContent
+    TooManyRequests429:
+      description: Превышена частота запросов; код rate.limitExceeded.
+      content: *errorContent
+    InternalServerError500:
+      description: Внутренняя ошибка; код service.internalError.
+      content: *errorContent
+    ServiceUnavailable503:
+      description: Сервис или обязательная зависимость недоступны; код service.unavailable.
+      content: *errorContent
