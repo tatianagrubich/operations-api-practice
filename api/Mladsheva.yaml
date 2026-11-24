@@ -1,0 +1,551 @@
+openapi: 3.0.3
+info:
+  title: operationsHistory-s-rest-v1
+  version: 1.0.0
+  description: API для работы с историей операций (Лента истории операций)
+  contact:
+    name: Anastasiay Mladsheva
+    email: mladsheva.nastya@yandex.ru
+    url: https://sfera.inno.local/knowledge/pages?id=1246094
+servers:
+  - url: 'http://localhost:8080/operations/api/v1'
+    description: LOCAL
+tags:
+  - name: operation
+    description: операция
+  - name: account
+    description: счет    
+security:
+  - bearerAuth: []        
+paths:
+  '/accounts/{accountId}/operations':
+    get:
+      summary: Поиск операций по счету клиента
+      operationId: getOperationsByAccountId
+      description: Метод получения истории операций счета по фильтрам с пагинацией и сортировкой
+      tags:
+        - account
+      parameters:
+        - $ref: '#/components/parameters/status'
+        - $ref: '#/components/parameters/startDate'
+        - $ref: '#/components/parameters/endDate'
+        - $ref: '#/components/parameters/categoryText'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/page'                                
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationListItem'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+  '/operations/{operationId}/info':
+    get:
+      summary: Получение основной информации по операции 
+      operationId: getOperationInfoById
+      description: Метод получения основной информации по операции счета клиента
+      tags:
+        - operation
+      parameters:
+        - $ref: '#/components/parameters/operationId'                               
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationInfo'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+  /operations: 
+    get:
+      summary: Поиск операций по фильтрам 
+      operationId: getOperations
+      description: Метод поиска операций по фильтрам с пагинацией и сортировкой для проверки и корректировки данных
+      tags:
+        - operation
+      parameters:
+        - $ref: '#/components/parameters/status'
+        - $ref: '#/components/parameters/startDate'
+        - $ref: '#/components/parameters/endDate'
+        - $ref: '#/components/parameters/scoringDecisionCode'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/page'                                
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationDetailListItem'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'                 
+  '/operations/{operationId}/details':
+    get:
+      summary: Получение деталей операции 
+      operationId: getOperation
+      description: Метод для получения деталей операции для проверки и корректировки данных 
+      tags:
+        - operation  
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationDetail'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInfoDto'
+components:
+  parameters:
+    accountId:
+      name: accountId
+      required: true
+      in: path
+      schema:
+        type: string
+        maxLength: 255
+      description: Идентификатор счет клиента
+    operationId:
+      name: operationId
+      required: true
+      in: path
+      schema:
+        type: string
+        maxLength: 255
+      description: Идентификатор операции по счету 
+    status:
+      name: status
+      required: true
+      in: query
+      schema:
+        type: string
+        maxLength: 7        
+        enum: [
+          "HOLD",
+          "SETTLED"               
+        ]        
+      description: Статус операции
+    startDate: 
+      name: startDate
+      required: false
+      in: query
+      schema:
+        type: string
+        format: date
+      description: Начальный диапазон времени операции    
+    endDate: 
+      name: endDate
+      required: false
+      in: query
+      schema:
+        type: string
+        format: date  
+      description: Конечный диапазон времени операции                        
+    categoryText:
+      name: categoryText
+      required: false
+      in: query
+      schema:
+        type: string
+        maxLength: 255
+      description: Категория трат  
+    scoringDecisionCode:
+      name: scoringDecisionCode
+      required: false
+      in: query
+      schema:
+        type: string
+        maxLength: 255
+      description: Код решения скоринга 
+    size:
+      name: size
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 10
+      description: Количество элементов на странице
+    page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+      description: Номер страницы                 
+  schemas:
+    OperationListItem:
+      title: OperationListItem
+      description: Объект массива операций по счету клиента 
+      type: object
+      properties:
+        operationId:
+          type: string
+          maxLength: 255          
+          description: Идентификатор операции 
+        status:
+          type: string
+          maxLength: 7        
+          enum: [
+            "HOLD",
+            "SETTLED"               
+          ] 
+        operationDateTime:
+          type: string         
+          format: date-time
+          pattern: >-
+            ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,3})?Z$
+          description: Время исполнения операции
+        accountId:
+          type: string
+          maxLength: 255          
+          description: Идентификатор счета
+        accountNumber:
+          type: string
+          maxLength: 20  
+          pattern: '^\^40817\\\*\{11\}\[0-9\]\{4\}\$$'               
+          description: Номер счета (показать первые 5 и последние 4 символа, середину заменить на*)                         
+        amountValue:
+          type: number
+          minimum: -999999999999.9999
+          maximum: 999999999999.9999         
+          description: Сумма операции
+        amountCurrency:
+          type: string
+          maxLength: 255          
+          description: Валюта операции
+        totalPages:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 1000000000000          
+          description: Общее количество страниц
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 223372036854775807  
+          description: Общее количество записей
+        size:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 50         
+          description: Количество элементов на текущей странице.
+        number:
+          type: integer
+          minimum: 0
+          maximum: 1000000000000         
+          format: int64
+          description: Номер страницы
+      required:
+        - accountId
+        - accountNumber
+        - operationDateTime
+        - status
+        - operationId 
+        - amountValue
+        - amountCurrency
+    OperationInfo:
+      title: OperationInfo
+      description: Объект основной информации по операции для клиента 
+      type: object
+      properties:
+        operationId:
+          type: string
+          maxLength: 255
+          description: Идентификатор операции 
+        status:
+          type: string
+          maxLength: 7        
+          enum: [
+            "HOLD",
+            "SETTLED"               
+          ] 
+        statusDescription:
+          type: string
+          maxLength: 255
+          description: Описание статуса операции          
+        operationDateTime:
+          type: string
+          format: date-time
+          pattern: >-
+            ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,3})?Z$
+          description: Время исполнения операции
+        accountId:
+          type: string
+          maxLength: 255
+          description: Идентификатор счета
+        accountNumber:
+          type: string
+          maxLength: 20
+          pattern: '^\^40817\\\*\{11\}\[0-9\]\{4\}\$$'         
+          description: Номер счета (показать первые 5 и последние 4 символа, середину заменить на*)
+        merchantName:
+          type: string
+          maxLength: 255          
+          description: Название продавца                             
+        categoryText:
+          type: string
+          maxLength: 255         
+          description: Категория трат 
+      required:
+        - accountId
+        - accountNumber
+        - operationDateTime
+        - status
+        - operationId 
+        - amountValue
+        - amountCurrency 
+    OperationDetailListItem:
+      title: OperationDetailListItem
+      description: Объект массива операций для проверки и корректировки данных
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/AccountDTO'
+        operation:
+          $ref: '#/components/schemas/OperationDTO'
+      required:
+        - account
+        - operation 
+    OperationDetail:
+      title: OperationDetail
+      description: Объект деталей операции для проверки и корректировки данных
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/AccountDTO'
+        operation:
+          $ref: '#/components/schemas/OperationDetailDTO'
+      required:
+        - account
+        - operation
+    AccountDTO:
+      title: AccountDTO
+      description: Объект данных счета 
+      type: object
+      properties:
+        accountId:
+          type: string
+          maxLength: 255          
+          description: Идентификатор счета
+        accountNumber:
+          type: string
+          maxLength: 20
+          pattern: '^\^40817\\\*\{11\}\[0-9\]\{4\}\$$'                  
+          description: Номер счета (показать первые 5 и последние 4 символа, середину заменить на*)
+        currency:
+          type: string
+          maxLength: 255          
+          description: Валюта счета          
+      required:
+        - accountId
+        - currency
+        - accountNumber
+    OperationDetailDTO:
+      title: OperationDetailDTO
+      description: Объект данных операции
+      type: object
+      properties:
+        operationId:
+          type: string
+          maxLength: 255          
+          description: Идентификатор операции 
+        amounts:
+          type: array
+          minItems: 1
+          maxItems: 2
+          description: Массив объектов сумм операции 
+          items:
+            $ref: '#/components/schemas/AmountDTO'
+        merchantName:
+          type: string
+          maxLength: 255          
+          description: Название продавца                             
+        categoryText:
+          type: string
+          maxLength: 255        
+          description: Категория трат 
+        status:
+          type: string
+          maxLength: 7
+          enum: [
+            "HOLD",
+            "SETTLED"               
+          ] 
+        statusDescription:
+          type: string
+          maxLength: 255
+          description: Описание статуса операции 
+        scoringDecision:
+          $ref: '#/components/schemas/ScoringDecisionDTO'
+      required:
+        - operationId
+        - amounts  
+        - status 
+    AmountDTO:
+      title: AmountDTO
+      description: Объект данных сумм по операции
+      type: object
+      properties:
+        value:
+          type: number
+          minimum: -999999999999.9999
+          maximum: 999999999999.9999          
+          description: Сумма операции
+        currency:
+          type: string
+          maxLength: 255        
+          description: Валюта операции  
+      required:
+        - value
+        - currency  
+    ScoringDecisionDTO:
+      title: ScoringDecisionDTO
+      description: Объект данных решения скоринга
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 255        
+          description: Код решения
+        description:
+          type: string
+          maxLength: 255        
+          description: Описание решения  
+      required:
+        - code
+        - description   
+    ErrorInfoDto:
+      type: object
+      title: ErrorInfoDto
+      description: Сообщение с информацией по произошедшей ошибке
+      additionalProperties: false
+      properties:
+        serviceName:
+          description: Имя сервиса
+          type: string
+          maxLength: 512
+        errorCode:
+          description: Код ошибки
+          type: string
+          maxLength: 512
+        message:
+          description: Сообщение об ошибке
+          type: string
+          maxLength: 512
+        userMessage:
+          description: Пользовательское сообщение
+          type: string
+          maxLength: 512
+        developerMessage:
+          description: Сообщение для разработчика
+          type: string
+          maxLength: 512
+    OperationDTO:
+      title: OperationDTO
+      description: Объект данных операции
+      type: object
+      properties:
+        operationId:
+          type: string
+          maxLength: 255      
+          description: Идентификатор операции 
+        amounts:
+          type: array
+          minItems: 1
+          maxItems: 2
+          description: Массив объектов сумм операции 
+          items:
+            $ref: '#/components/schemas/AmountDTO'
+        status:
+          type: string
+          maxLength: 7          
+          enum: [
+            "HOLD",
+            "SETTLED"               
+          ] 
+      required:
+        - operationId
+        - amounts  
+        - status           
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer                                                                                                                                     
