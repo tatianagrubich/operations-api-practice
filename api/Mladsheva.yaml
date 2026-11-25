@@ -31,7 +31,8 @@ paths:
         - $ref: '#/components/parameters/endDate'
         - $ref: '#/components/parameters/categoryText'
         - $ref: '#/components/parameters/size'
-        - $ref: '#/components/parameters/page'                                
+        - $ref: '#/components/parameters/page' 
+        - $ref: '#/components/parameters/accountId'                                        
       responses:
         '200':
           description: OK
@@ -142,7 +143,9 @@ paths:
       operationId: getOperation
       description: Метод для получения деталей операции для проверки и корректировки данных 
       tags:
-        - operation  
+        - operation
+      parameters:
+        - $ref: '#/components/parameters/operationId'            
       responses:
         '200':
           description: OK
@@ -278,7 +281,7 @@ components:
         accountNumber:
           type: string
           maxLength: 20  
-          pattern: '^\^40817\\\*\{11\}\[0-9\]\{4\}\$$'               
+          pattern: '^[0-9]{5}\*{11}[0-9]{4}$'               
           description: Номер счета (показать первые 5 и последние 4 символа, середину заменить на*)                         
         amountValue:
           type: number
@@ -354,7 +357,7 @@ components:
         accountNumber:
           type: string
           maxLength: 20
-          pattern: '^\^40817\\\*\{11\}\[0-9\]\{4\}\$$'         
+          pattern: '^[0-9]{5}\*{11}[0-9]{4}$'         
           description: Номер счета (показать первые 5 и последние 4 символа, середину заменить на*)
         merchantName:
           type: string
@@ -408,7 +411,7 @@ components:
         accountNumber:
           type: string
           maxLength: 20
-          pattern: '^\^40817\\\*\{11\}\[0-9\]\{4\}\$$'                  
+          pattern: '^[0-9]{5}\*{11}[0-9]{4}$'                  
           description: Номер счета (показать первые 5 и последние 4 символа, середину заменить на*)
         currency:
           type: string
