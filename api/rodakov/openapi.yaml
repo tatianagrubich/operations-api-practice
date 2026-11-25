@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: 'operations-api-practice'
-  version: 0.0.0001
+  version: 1.0.0
   description: API Фронт.История операций
   contact:
     name: Родаков Олег Ростиславович
@@ -16,6 +16,10 @@ tags:
     description: Счета клиента
   - name: Operations
     description: Операции клиента
+
+security:
+  - BearerAuth: []
+      
 paths:
   /accounts:
     get:
@@ -279,6 +283,11 @@ paths:
         '503':
            $ref: '#/components/responses/ServiceUnavailable'            
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 
   parameters:
     ClientIdHeader:
       name: X-Client-ID        
@@ -340,12 +349,15 @@ components:
       title: AccountListDTO
       description: Список счетов
       required:
-        - accounts      
+        - accounts 
+        - pagination
       properties:
         accounts:
           type: array
           items:
             $ref: '#/components/schemas/AccountResponseDTO'
+        pagination:
+          $ref: '#/components/schemas/PaginationResponseDTO'            
     AccountResponseDTO:
       type: object
       title: AccountResponseDTO
@@ -371,12 +383,15 @@ components:
       title: OperationListDTO
       description: Список операций
       required:
-        - operations      
+        - operations
+        - pagination        
       properties:
         operations:
           type: array
           items:
             $ref: '#/components/schemas/OperationResponseDTO'
+        pagination:
+          $ref: '#/components/schemas/PaginationResponseDTO'
     OperationResponseDTO:
       type: object
       title: OperationResponseDTO
@@ -454,6 +469,31 @@ components:
         - Отдых и резвлечения
         - Переводы
         - Прочее
+    PaginationResponseDTO:
+      type: object
+      title: PaginationResponseDTO
+      description: Информация о пагинации
+      required:
+        - page
+        - limit
+        - total
+      properties:
+        page:
+          type: integer
+          description: Текущая страница
+          minimum: 0
+          maximum: 1000000          
+          example: 2
+        limit:
+          description: Размер выборки
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          description: Общее количество записей
+          type: integer
+          minimum: 0
+          maximum: 1000000            
     OperationDetailDTO:
       type: object
       title: OperationDetailDTO
@@ -481,25 +521,7 @@ components:
         account:
           $ref: '#/components/schemas/AccountResponseDTO'
         amount:
-          type: array
-          items:        
-            $ref: '#/components/schemas/AmountResponseDTO'
-        currencyRate:
-          type: object
-          required:
-            - currency
-            - rate
-          properties:
-            currency:
-              $ref: '#/components/schemas/CurrencyEnumDTO'
-            rate:
-              type: number
-              format: double
-              multipleOf: 0.0001
-              minimum: 0.0001
-              maximum: 999999999999.9999
-              description: Курс валюты с точностью до 4 знаков после запятой
-              example: 92.4512
+          $ref: '#/components/schemas/AmountResponseDTO'          
         category:
           $ref: '#/components/schemas/CategoryEnumDTO'            
         merchant:
@@ -538,11 +560,9 @@ components:
         code:
           type: string
           maxLength: 50
-          example: "NOT_FOUND"
         title:
           type: string
           maxLength: 255
-          example: "Запрашиваемый ресурс не найден"
         details:
           type: array
           items:
@@ -629,8 +649,8 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
     ServiceUnavailable:
-      description: Внутренняя ошибка сервера
+      description: Сервис недоступен
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'            
+            $ref: '#/components/schemas/Error'  
